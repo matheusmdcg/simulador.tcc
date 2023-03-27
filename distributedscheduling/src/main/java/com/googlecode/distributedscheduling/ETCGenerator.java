@@ -117,6 +117,7 @@ public class ETCGenerator {
 //                    if(teste <= 0 )
 //                        out.println("etc negativo = "+ teste);
                     etc[i][j] = teste;
+//                    out.println("etc["+i+"]["+j+"]="+ etc[i][j]);
                     //porque está pegando só o valor inteiro?
                     //i = tarefas
                     //j = máquinas

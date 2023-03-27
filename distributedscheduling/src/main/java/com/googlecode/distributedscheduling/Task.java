@@ -48,15 +48,15 @@ public class Task {
         this.cTime = cTime;
     }
 
-    public int get_eTime() {
-//        if(eTime <= 0)
-//            out.println("cTime"+ eTime);
-        return eTime;
-    }
-
-    public void set_eTime(int eTime) {
-        this.eTime = eTime;
-    }
+//    public int get_eTime() {
+////        if(eTime <= 0)
+////            out.println("cTime"+ eTime);
+//        return eTime;
+//    }
+//
+//    public void set_eTime(int eTime) {
+//        this.eTime = eTime;
+//    }
 
 
    

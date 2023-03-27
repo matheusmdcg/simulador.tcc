@@ -1,5 +1,6 @@
 package com.googlecode.distributedscheduling;
 
+import java.util.Random;
 import java.util.Vector;
 import java.util.Comparator;
 import java.util.PriorityQueue;
@@ -144,6 +145,7 @@ public class SimulatorEngine {
         double sumMat = 0;
         for(int i=0;i<m;i++){
             sumMat = sumMat + mat[i];
+//            out.println("SUMMAT="+sumMat);
 //            if(mat[i] <= 0)
 //                out.println("mat negativo: "+mat[i]);
 //            if(sumMat <= 0) {
@@ -152,6 +154,8 @@ public class SimulatorEngine {
 //                out.println("================================");
 //            }
         }
+//        out.println("*********\n");
+
         return sumMat;
     }
 
@@ -172,13 +176,18 @@ public class SimulatorEngine {
     }
 
     public void mapTask(Task t, int machine){
-        t.set_eTime(etc[t.tid][machine]);
+        double random = new Random().nextDouble();
+//        t.set_eTime(etc[t.tid][machine]);
+//        t.set_eTime((etc[t.tid][machine]-10) + (int)(random*((etc[t.tid][machine]+10)-(etc[t.tid][machine]-10))));
+
         if(mat[machine] <= 0)
             out.println("mat[machine]"+ mat[machine]);
 //        out.println("etc[t.tid][machine]"+ etc[t.tid][machine]);
-        t.set_cTime( mat[machine]+etc[t.tid][machine] );
+        t.set_cTime(mat[machine] + etc[t.tid][machine]);
+//        t.set_cTime( mat[machine] + ((etc[t.tid][machine]-10) + (int)(random*((etc[t.tid][machine]+10)-(etc[t.tid][machine]-10)))));
+        //o tempo estimado não é o tempo real que a máquina levará
         p[machine].offer(t);
-        mat[machine]=t.cTime;
+        mat[machine]=t.get_cTime();
     }
 
     
@@ -189,13 +198,15 @@ public class SimulatorEngine {
         int tick=0;
 
         Vector<Task> metaSet=new Vector<Task>(S);
+
         int i1=0;
-        int i2=S;
+        int i2=S;/*Meta-task set size*/
+//        out.println("Tamanho do metaset:"+S);
 
         /*Initialization*/
         /*Add the first S tasks to the meta set and schedule them*/
         for(int i=i1;i<i2;i++){
-            Task t=new Task(arrivals[i],i);
+            Task t = new Task(arrivals[i],i);
             metaSet.add(t);
         }
         i1=i2;

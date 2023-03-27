@@ -1,5 +1,8 @@
 package com.googlecode.distributedscheduling;
 
+import com.opencsv.CSVWriter;
+import com.opencsv.CSVWriterBuilder;
+
 import java.io.*;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
@@ -12,13 +15,13 @@ import static java.lang.System.out;
  */
 public class Main {
 
-    public static void main(String... args) {
+    public static void main(String... args) throws IOException {
         boolean byFile = false;
         boolean alwaysGenerateETC = false;
 
         /*Specify the parameters here*/
-        int NUM_MACHINES = 16;//256;
-        int NUM_TASKS = 512;//8192;
+        int NUM_MACHINES = 3;//256;
+        int NUM_TASKS = 10;//8192;
         int no_of_simulations = 2000;
 
         double ARRIVAL_RATE = 19;
@@ -44,11 +47,12 @@ public class Main {
             byFile = true;
             System.out.println("Qual o nome do arquivo que você quer ler?");
                 fileName = "./instancias/"+scannerUser.nextLine();
-            System.out.println("Quantas simulações?");
-            no_of_simulations = Integer.parseInt(scannerUser.nextLine());
+//            System.out.println("Quantas simulações?");
+//            no_of_simulations = Integer.parseInt(scannerUser.nextLine());
+            no_of_simulations = 1;
             try {
 
-                System.out.println("Vou ler o arquivo então2");
+                System.out.println("Vou ler o arquivo então");
                 Scanner scanner = new Scanner(new FileReader(fileName));
                 String line = scanner.nextLine();
 
@@ -73,8 +77,9 @@ public class Main {
             System.out.println("Quantas tasks?");
             NUM_TASKS = Integer.parseInt(scannerUser.nextLine());
 
-            System.out.println("Quantas simulações?");
-            no_of_simulations = Integer.parseInt(scannerUser.nextLine());
+//            System.out.println("Quantas simulações?");
+//            no_of_simulations = Integer.parseInt(scannerUser.nextLine());
+            no_of_simulations = 1;
 
 
 
@@ -106,7 +111,7 @@ public class Main {
         }
 
         System.out.println("Qual Nome do arquivo que você quer criar para colocar os resultados?");
-        fileNameResults = "./resultados/"+scannerUser.nextLine();
+            fileNameResults = "./resultados/"+scannerUser.nextLine();
         File resultados = new File(fileNameResults);
 
 
@@ -125,9 +130,12 @@ public class Main {
         Map<Integer, List<Long>> flowtimes = new HashMap<>();
         Map<Integer, List<Double>> computationTimes = new HashMap<>();
         long avgMakespan;
+        long makespanMET = 1;
         double averageUtilization;
         double averageFlowTime;
         double averageComputationTime;
+
+        metaSetSize = NUM_TASKS;
 
         SimulatorEngine se;
         if (fileName != null)
@@ -161,6 +169,7 @@ public class Main {
 
 
                 flowTimeList[j] += se.sumMAT();
+//                out.println("SUMAT = "+flowTimeList[j]);
                 flowtimes.putIfAbsent(j, new ArrayList<>());
                 List<Long> avgFlowTimesForHeuristic = flowtimes.get(j);
                 avgFlowTimesForHeuristic.add((long) se.sumMAT());
@@ -177,6 +186,10 @@ public class Main {
                 se.cleanMatPriorityQueue();
 
                 //Antes chamava essa função, que não gerava uma nova simulação, só limpava o mat e a fila de prioridade: se.newSimulation(false);
+                String heuristic = htype[j].toString();
+                out.println("heuristica:"+heuristic);
+                if(heuristic == "MET")
+                    makespanMET = sigmaMakespan[j];
             }
         }
 
@@ -192,6 +205,10 @@ public class Main {
 
         BufferedWriter bw = null;
         FileOutputStream fos = null;
+        CSVWriter writer = (CSVWriter) new CSVWriterBuilder(new FileWriter(fileNameResults+".csv"))
+                .withSeparator(',')
+                .build();
+        writer.writeNext(("Heuristica#Makespan#Utilização Média#FlowTime#ComputationTime#matchingProximity").split("#"));
         try{
             fos = new FileOutputStream(resultados);
             bw = new BufferedWriter(new OutputStreamWriter(fos));
@@ -202,6 +219,7 @@ public class Main {
                 avgMakespans.add(avgMakespan);
                 Double standardDeviation = calculateStandardDeviation(makespans.get(j), avgMakespan);
                 makespanStandardDeviations.add(standardDeviation);
+
 
                 averageUtilization = averageUtilizationList[j] / no_of_simulations;
                 avgUtilizationList.add(averageUtilization);
@@ -229,7 +247,7 @@ public class Main {
                 bw.write("Standard Deviation makespan:"+ standardDeviation);
                 bw.newLine();
 
-                bw.write("Average Utilization:"+ standardDeviation);
+                bw.write("Average Utilization:"+ averageUtilization);
                 bw.newLine();
                 bw.write("Standard Deviation Average Utilization:"+ utilizationStandardDeviation);
                 bw.newLine();
@@ -244,6 +262,16 @@ public class Main {
                 bw.write("Standard Deviation Average Computation Time:"+ computationStandardDeviation);
                 bw.newLine();
                 bw.newLine();
+
+                double matchingProximity = (double)avgMakespan / (double)makespanMET;
+                out.println("makespanMET = "+makespanMET);
+                out.println("avgMakespan = "+avgMakespan);
+                out.println("\nmatchingProximity = "+ matchingProximity);
+
+
+                String[] entries = {hName, String.valueOf(avgMakespan), String.valueOf(averageUtilization), String.valueOf(averageFlowTime), String.valueOf(averageComputationTime), String.valueOf(matchingProximity)};
+                writer.writeNext(entries);
+
 
 
                 String outputAvg = String.format("%12.8E", (double) avgMakespan);
@@ -273,6 +301,7 @@ public class Main {
         }catch (IOException err){
             err.printStackTrace();
         }
+        writer.close();
 
         long t2 = System.currentTimeMillis();
         out.println("\nTotal time taken in the simulation = " + (t2 - t1) / 1000 + " sec.");
