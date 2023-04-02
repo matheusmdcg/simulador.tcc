@@ -1,0 +1,48 @@
+Heuristic Name:MET
+Average Makespan:117972.0
+Average Utilization:0.5300837213429098
+Average flowtime:1.6009044E7
+Average Computation Time:24.0
+
+Heuristic Name:MCT
+Average Makespan:112263.0
+Average Utilization:0.7950937787103503
+Average flowtime:2.2850566E7
+Average Computation Time:42.0
+
+Heuristic Name:MinMin
+Average Makespan:98530.0
+Average Utilization:0.6609076645437935
+Average flowtime:1.6670523E7
+Average Computation Time:60881.0
+
+Heuristic Name:Sufferage
+Average Makespan:112263.0
+Average Utilization:0.7950937787103503
+Average flowtime:2.2850566E7
+Average Computation Time:6941.0
+
+Heuristic Name:MinMean
+Average Makespan:97365.0
+Average Utilization:0.6899602478833123
+Average flowtime:1.7197663E7
+Average Computation Time:41102.0
+
+Heuristic Name:MaxMin
+Average Makespan:175508.0
+Average Utilization:0.9915777956151905
+Average flowtime:4.4551772E7
+Average Computation Time:30823.0
+
+Heuristic Name:MinVar
+Average Makespan:96856.0
+Average Utilization:0.7085027284696919
+Average flowtime:1.7567552E7
+Average Computation Time:25754.0
+
+Heuristic Name:OLB
+Average Makespan:8674688.0
+Average Utilization:0.9284323866916434
+Average flowtime:2.06178849E9
+Average Computation Time:17.0
+

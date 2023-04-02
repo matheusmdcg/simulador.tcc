@@ -13,12 +13,12 @@ import static java.lang.System.out;
  */
 public class SchedulingEngine {
 
-    Heuristic h;
+    String heuristic;
     SimulatorEngine sim;
     long computationTime;
 
-    public SchedulingEngine(SimulatorEngine sim,Heuristic heuristic){
-        h=heuristic;
+    public SchedulingEngine(SimulatorEngine sim, String heuristic){
+       this.heuristic=heuristic;
         this.sim=sim;
     }
 
@@ -37,30 +37,31 @@ public class SchedulingEngine {
         /*If any machine has zero assigned tasks then set mat[] for that machine to be the current time.*/
         for(int i=0;i<sim.m;i++){
             if(sim.p[i].isEmpty()){
-                sim.mat[i]=currentTime;
-                if(sim.mat[i] <= 0) {
-                    out.println("sim.mat negativo: " + sim.mat[i]);
-                    out.println("currentTime negativo: " + currentTime);
-                    out.println("+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=");
-                }
+//                sim.mat[i]=currentTime; //isso daqui é o que deixa cada execução um pouco diferente da outra
+                sim.mat[i]=0;
+//                if(sim.mat[i] <= 0) {
+//                    out.println("sim.mat negativo: " + sim.mat[i]);
+//                    out.println("currentTime negativo: " + currentTime);
+//                    out.println("+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=");
+//                }
             }
         }
 
-        if(h==Heuristic.MET)
+        if(heuristic.equals("MET"))
             schedule_MET(metaSet,currentTime);
-        else if(h==Heuristic.MCT)
+        else if(heuristic.equals("MCT"))
             schedule_MCT(metaSet,currentTime);
-        else if(h==Heuristic.MinMin)
+        else if(heuristic.equals("MinMin"))
             schedule_MinMin(metaSet,currentTime);
-        else if(h==Heuristic.Sufferage)
+        else if(heuristic.equals("Sufferage"))
             schedule_Sufferage(metaSet,currentTime);
-        else if(h==Heuristic.MinMean)
+        else if(heuristic.equals("MinMean"))
             schedule_MinMean(metaSet,currentTime);
-        else if(h==Heuristic.MaxMin)
+        else if(heuristic.equals("MaxMin"))
             schedule_MaxMin(metaSet,currentTime);
-        else if(h==Heuristic.MinVar)
+        else if(heuristic.equals("MinVar"))
             schedule_MinVar(metaSet,currentTime);
-        else if(h==Heuristic.OLB)
+        else if(heuristic.equals("OLB"))
             schedule_olb(metaSet);
 //        else if(h==Heuristic.Random)
 //            schedule_Random(metaSet);
@@ -84,11 +85,13 @@ public class SchedulingEngine {
             minExecTime = Integer.MAX_VALUE;
             Task t=metaSet.elementAt(i);
 //            out.println("-----------------\nMET\ntask:"+t.tid);
+//            out.println("task number:"+i);
             for(int j=0;j<sim.m;j++){ //para cada máquina
                 if( sim.etc[t.tid][j] < minExecTime){
                     //sim.etc[t.tid][j] ou etc[tarefa][maquina]
                     //Tempo estimado que a máquina irá levar para processar esta tarefa.
-
+//                    out.println("Machine Number:"+j);
+//                    out.println(sim.etc[t.tid][j] + " < " + minExecTime);
                     minExecTime=sim.etc[t.tid][j];
                     machine=j;
                 }

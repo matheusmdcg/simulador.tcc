@@ -34,7 +34,7 @@ public class SimulatorEngine {
     public int arrivals[];
 
     /*ETC matrix*/
-    public int etc[][];
+    public double etc[][];
 
     /*Machine availability time, the time at which machine i finishes all previously assigned tasks.*/
     public double mat[];
@@ -48,9 +48,9 @@ public class SimulatorEngine {
     long sigma;
 
     /*For calculating makespan*/
-    long makespan;
+    double makespan;
     //contrutor generico
-    public SimulatorEngine(int NUM_MACHINES, int NUM_TASKS, double ARRIVAL_RATE, int metaSetSize,Heuristic HEURISTIC){
+    public SimulatorEngine(int NUM_MACHINES, int NUM_TASKS, double ARRIVAL_RATE, int metaSetSize,String HEURISTIC){
 
         sigma=0;
         makespan=0;
@@ -71,7 +71,7 @@ public class SimulatorEngine {
     }
 
     //construtor para usar parametros do usuário
-    public SimulatorEngine(int NUM_MACHINES, int NUM_TASKS, double ARRIVAL_RATE, int metaSetSize,Heuristic HEURISTIC, TaskHeterogeneity th, MachineHeterogeneity mh){
+    public SimulatorEngine(int NUM_MACHINES, int NUM_TASKS, double ARRIVAL_RATE, int metaSetSize,String HEURISTIC, TaskHeterogeneity th, MachineHeterogeneity mh){
 
         this(NUM_MACHINES, NUM_TASKS, ARRIVAL_RATE, metaSetSize, HEURISTIC);
         TH = th;
@@ -80,7 +80,7 @@ public class SimulatorEngine {
     }
 
     //construtor para usar parametros do usuário + um arquivo para adicionar os valores aleatórios gerados
-    public SimulatorEngine(int NUM_MACHINES, int NUM_TASKS, double ARRIVAL_RATE, int metaSetSize,Heuristic HEURISTIC, TaskHeterogeneity th, MachineHeterogeneity mh, String fileNamenew){
+    public SimulatorEngine(int NUM_MACHINES, int NUM_TASKS, double ARRIVAL_RATE, int metaSetSize,String HEURISTIC, TaskHeterogeneity th, MachineHeterogeneity mh, String fileNamenew){
 
         this(NUM_MACHINES, NUM_TASKS, ARRIVAL_RATE, metaSetSize, HEURISTIC);
         TH = th;
@@ -90,7 +90,7 @@ public class SimulatorEngine {
     }
 
     //construtor para usar parametros do arquivo
-    public SimulatorEngine(int NUM_MACHINES, int NUM_TASKS, double ARRIVAL_RATE, int metaSetSize,Heuristic HEURISTIC, String fileScanner){
+    public SimulatorEngine(int NUM_MACHINES, int NUM_TASKS, double ARRIVAL_RATE, int metaSetSize,String HEURISTIC, String fileScanner){
         this(NUM_MACHINES, NUM_TASKS, ARRIVAL_RATE, metaSetSize, HEURISTIC);
         generateByFile(fileScanner);
     }
@@ -159,11 +159,11 @@ public class SimulatorEngine {
         return sumMat;
     }
 
-    public void setHeuristic(Heuristic h){
-        this.eng.h=h;
+    public void setHeuristic(String h){
+        this.eng.heuristic=h;
     }
 
-    public long getMakespan() {
+    public double getMakespan() {
         return makespan;
     }
 
@@ -171,7 +171,7 @@ public class SimulatorEngine {
         return arrivals;
     }
 
-    public int[][] getEtc() {
+    public double[][] getEtc() {
         return etc;
     }
 
@@ -180,11 +180,12 @@ public class SimulatorEngine {
 //        t.set_eTime(etc[t.tid][machine]);
 //        t.set_eTime((etc[t.tid][machine]-10) + (int)(random*((etc[t.tid][machine]+10)-(etc[t.tid][machine]-10))));
 
-        if(mat[machine] <= 0)
-            out.println("mat[machine]"+ mat[machine]);
+//        if(mat[machine] <= 0)
+//            out.println("mat[machine]"+ mat[machine]);
 //        out.println("etc[t.tid][machine]"+ etc[t.tid][machine]);
         t.set_cTime(mat[machine] + etc[t.tid][machine]);
-//        t.set_cTime( mat[machine] + ((etc[t.tid][machine]-10) + (int)(random*((etc[t.tid][machine]+10)-(etc[t.tid][machine]-10)))));
+//        double percent = etc[t.tid][machine]/15;
+//        t.set_cTime( mat[machine] + (etc[t.tid][machine]-percent + random*((etc[t.tid][machine]+percent)-(etc[t.tid][machine]-percent))));
         //o tempo estimado não é o tempo real que a máquina levará
         p[machine].offer(t);
         mat[machine]=t.get_cTime();
@@ -259,10 +260,10 @@ public class SimulatorEngine {
     private void removeCompletedTasks(int currentTime){
         for(int i=0;i<this.m;i++){
             if(!p[i].isEmpty()){
-                Task t=p[i].peek();               
+                Task t=p[i].peek();
                 while(t.cTime<=currentTime){
                     sigma+=t.cTime;
-                    makespan=(long)max(makespan,t.cTime);
+                    makespan=max(makespan,t.cTime);
                     //out.println("Removing task "+t.tid+" at time "+currentTime);////////////////////////
                     p[i].poll();
                     if(!p[i].isEmpty())

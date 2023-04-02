@@ -25,7 +25,7 @@ public class ETCGenerator {
     int n;
 
     /*The Expected Time to Complete matrix*/
-    int[][] etc;
+    double[][] etc;
 
     /*Task Heterogeneity*/
     int T_t;
@@ -37,7 +37,7 @@ public class ETCGenerator {
                         MachineHeterogeneity MACHINE_HETEROGENEITY) {
         m = NUM_MACHINES;
         n = NUM_TASKS;
-        etc = new int[n][m];/*e[i][j] represents the time taken to complete the ith task on the jth machine.*/
+        etc = new double[n][m];/*e[i][j] represents the time taken to complete the ith task on the jth machine.*/
         T_t = TASK_HETEROGENEITY.getNumericValue();
         T_m = MACHINE_HETEROGENEITY.getNumericValue();
     }
@@ -45,14 +45,14 @@ public class ETCGenerator {
     public ETCGenerator(int NUM_MACHINES, int NUM_TASKS) {
         m = NUM_MACHINES;
         n = NUM_TASKS;
-        etc = new int[n][m];/*e[i][j] represents the time taken to complete the ith task on the jth machine.*/
+        etc = new double[n][m];/*e[i][j] represents the time taken to complete the ith task on the jth machine.*/
     }
 
     public ETCGenerator ETCEngine(int NUM_MACHINES, int NUM_TASKS, TaskHeterogeneity TASK_HETEROGENEITY,
                                   MachineHeterogeneity MACHINE_HETEROGENEITY) {
         m = NUM_MACHINES;
         n = NUM_TASKS;
-        etc = new int[n][m];/*e[i][j] represents the time taken to complete the ith task on the jth machine.*/
+        etc = new double[n][m];/*e[i][j] represents the time taken to complete the ith task on the jth machine.*/
         T_t = TASK_HETEROGENEITY.getNumericValue();
         T_m = MACHINE_HETEROGENEITY.getNumericValue();
         return this;
@@ -108,10 +108,10 @@ public class ETCGenerator {
 
             int rows = Integer.parseInt(line.split(" ")[0]); //qtd de tarefas
             int cols = Integer.parseInt(line.split(" ")[1]); //qtd de máquinas
-            etc = new int[rows][cols];
+            etc = new double[rows][cols];
             for (int i = 0; i < rows; i++)
                 for (int j = 0; j < cols; j++) {
-                    int teste = Double.valueOf(scanner.nextLine()).intValue();
+                    double teste = Double.parseDouble(scanner.nextLine());
 //                    int teste = (int) (Double.valueOf(scanner.nextLine())*1000);
 //
 //                    if(teste <= 0 )
@@ -131,7 +131,7 @@ public class ETCGenerator {
         }
     }
 
-    public int[][] getETC(){
+    public double[][] getETC(){
         return etc;
     }
 

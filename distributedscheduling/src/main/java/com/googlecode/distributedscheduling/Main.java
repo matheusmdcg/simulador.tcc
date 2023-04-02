@@ -37,8 +37,8 @@ public class Main {
         TaskHeterogeneity th = TH.HIGH;
         MachineHeterogeneity mh = MH.HIGH;
 
-        System.out.println("TASK_HETEROGENEITY: "+ th);
-        System.out.println("MACHINE_HETEROGENEITY: "+ mh);
+//        System.out.println("TASK_HETEROGENEITY: "+ th);
+//        System.out.println("MACHINE_HETEROGENEITY: "+ mh);
 
         Scanner scannerUser = new Scanner(System.in);
         System.out.println("Você quer pegar os dados de um arquivo? S/N");
@@ -114,23 +114,36 @@ public class Main {
             fileNameResults = "./resultados/"+scannerUser.nextLine();
         File resultados = new File(fileNameResults);
 
+        List<String> heuristicas = new ArrayList<String>();
+        System.out.println("Você quer executar todas as heuristicas? S/N");
+        String todas = scannerUser.nextLine();
+        if (todas.equalsIgnoreCase("S")){
+            heuristicas.addAll(Arrays.asList("MET", "MCT", "MinMin", "Sufferage", "MinMean", "MaxMin", "MinVar", "OLB"));
+        }
+        else {
+            System.out.println("Qual heuristica você quer executar?");
+            String tempRead = scannerUser.nextLine();
+
+            heuristicas.addAll(Arrays.asList("MET", tempRead));
+        }
+        out.println("Heuristicas:"+heuristicas);
+
 
         long t1 = System.currentTimeMillis();
 
 
         /*Specify the parameters here*/
 
-        Heuristic[] htype = Heuristic.values();
-        long[] sigmaMakespan = new long[htype.length];
-        double[] averageUtilizationList = new double[htype.length];
-        long[] flowTimeList = new long[htype.length];
-        long[] computationTimeList = new long[htype.length];
-        Map<Integer, List<Long>> makespans = new HashMap<>();
+        double[] sigmaMakespan = new double[heuristicas.size()];
+        double[] averageUtilizationList = new double[heuristicas.size()];
+        long[] flowTimeList = new long[heuristicas.size()];
+        long[] computationTimeList = new long[heuristicas.size()];
+        Map<Integer, List<Double>> makespans = new HashMap<>();
         Map<Integer, List<Double>> avgUtilizations = new HashMap<>();
         Map<Integer, List<Long>> flowtimes = new HashMap<>();
         Map<Integer, List<Double>> computationTimes = new HashMap<>();
-        long avgMakespan;
-        long makespanMET = 1;
+        double avgMakespan;
+        double makespanMET = 1;
         double averageUtilization;
         double averageFlowTime;
         double averageComputationTime;
@@ -149,19 +162,22 @@ public class Main {
             se.newSimulation(alwaysGenerateETC, fileName);
 //            se.cleanMatPriorityQueue();
 
-            for (int j = 0; j < htype.length; j++) {
-                se.setHeuristic(htype[j]);
+            for (int j = 0; j < heuristicas.size() ; j++) {
+
+                out.println("heuristica:"+heuristicas.get(j));
+
+                se.setHeuristic(heuristicas.get(j));
                 se.simulate();
 
                 sigmaMakespan[j] += se.getMakespan();
                 makespans.putIfAbsent(j, new ArrayList<>());
-                List<Long> makespansForHeuristic = makespans.get(j);
+                List<Double> makespansForHeuristic = makespans.get(j);
                 makespansForHeuristic.add(se.getMakespan());
                 makespans.replace(j, makespansForHeuristic);
 
 //                out.println("FlowTime se.mat.sum:"+ Arrays.stream(se.mat).sum());
 //                out.println("SumMat calculado separado:" + se.sumMAT());
-                averageUtilizationList[j] += ((double) se.sumMAT() / (double) (se.makespan * se.m));
+                averageUtilizationList[j] += se.sumMAT() / (se.makespan * se.m);
                 avgUtilizations.putIfAbsent(j, new ArrayList<>());
                 List<Double> avgUtilizationsForHeuristic = avgUtilizations.get(j);
                 avgUtilizationsForHeuristic.add((double) se.sumMAT() / (double) (se.makespan * se.m));
@@ -186,14 +202,13 @@ public class Main {
                 se.cleanMatPriorityQueue();
 
                 //Antes chamava essa função, que não gerava uma nova simulação, só limpava o mat e a fila de prioridade: se.newSimulation(false);
-                String heuristic = htype[j].toString();
-                out.println("heuristica:"+heuristic);
-                if(heuristic == "MET")
+
+                if(heuristicas.get(j) == "MET")
                     makespanMET = sigmaMakespan[j];
             }
         }
 
-        List<Long> avgMakespans = new ArrayList<>();
+        List<Double> avgMakespans = new ArrayList<>();
         List<Double> makespanStandardDeviations = new ArrayList<>();
         List<Double> avgUtilizationList = new ArrayList<>();
         List<Double> utilizationStandardDeviations = new ArrayList<>();
@@ -213,7 +228,7 @@ public class Main {
             fos = new FileOutputStream(resultados);
             bw = new BufferedWriter(new OutputStreamWriter(fos));
 
-            for (int j = 0; j < htype.length; j++) {
+            for (int j = 0; j < heuristicas.size(); j++) {
 
                 avgMakespan = sigmaMakespan[j] / no_of_simulations;
                 avgMakespans.add(avgMakespan);
@@ -237,36 +252,33 @@ public class Main {
                 computationStandardDeviations.add(computationStandardDeviation);
 
 
-                String hName = htype[j].toString();
+                String hName = heuristicas.get(j);
 
                 bw.write("Heuristic Name:"+ hName);
                 bw.newLine();
 
                 bw.write("Average Makespan:"+ avgMakespan);
                 bw.newLine();
-                bw.write("Standard Deviation makespan:"+ standardDeviation);
-                bw.newLine();
+//                bw.write("Standard Deviation makespan:"+ standardDeviation);
+//                bw.newLine();
 
                 bw.write("Average Utilization:"+ averageUtilization);
                 bw.newLine();
-                bw.write("Standard Deviation Average Utilization:"+ utilizationStandardDeviation);
-                bw.newLine();
+//                bw.write("Standard Deviation Average Utilization:"+ utilizationStandardDeviation);
+//                bw.newLine();
 
                 bw.write("Average flowtime:"+ averageFlowTime);
                 bw.newLine();
-                bw.write("Standard Deviation Average flowtime:"+ flowtimeStandardDeviation);
-                bw.newLine();
+//                bw.write("Standard Deviation Average flowtime:"+ flowtimeStandardDeviation);
+//                bw.newLine();
 
                 bw.write("Average Computation Time:"+ averageComputationTime);
                 bw.newLine();
-                bw.write("Standard Deviation Average Computation Time:"+ computationStandardDeviation);
-                bw.newLine();
+//                bw.write("Standard Deviation Average Computation Time:"+ computationStandardDeviation);
+//                bw.newLine();
                 bw.newLine();
 
                 double matchingProximity = (double)avgMakespan / (double)makespanMET;
-                out.println("makespanMET = "+makespanMET);
-                out.println("avgMakespan = "+avgMakespan);
-                out.println("\nmatchingProximity = "+ matchingProximity);
 
 
                 String[] entries = {hName, String.valueOf(avgMakespan), String.valueOf(averageUtilization), String.valueOf(averageFlowTime), String.valueOf(averageComputationTime), String.valueOf(matchingProximity)};
@@ -274,27 +286,27 @@ public class Main {
 
 
 
-                String outputAvg = String.format("%12.8E", (double) avgMakespan);
-                String outputDp = String.format("%12.8E", standardDeviation);
+//                String outputAvg = String.format("%12.8E", (double) avgMakespan);
+//                String outputDp = String.format("%12.8E", standardDeviation);
+//
+//                String outputAvgUt = String.format("%8.8f", averageUtilization);
+//                String outputAvgUtDp = String.format("%8.8f", utilizationStandardDeviation);
+//
+//                String outputAvgFlowTime = String.format("%12.8E", averageFlowTime);
+//                String outputAvgFlowTimeDp = String.format("%12.8E", flowtimeStandardDeviation);
 
-                String outputAvgUt = String.format("%8.8f", averageUtilization);
-                String outputAvgUtDp = String.format("%8.8f", utilizationStandardDeviation);
 
-                String outputAvgFlowTime = String.format("%12.8E", averageFlowTime);
-                String outputAvgFlowTimeDp = String.format("%12.8E", flowtimeStandardDeviation);
-
-
-                out.println("\nAvg makespan for " + hName + " heuristic for " + no_of_simulations + " simulations is =  " + avgMakespan);
-                out.println("Makespan Standard Deviation for " + hName + " heuristic for " + no_of_simulations + " simulations is =  " + standardDeviation);
-
-                out.println("Average Utilization for " + hName + " heuristic for " + no_of_simulations + " simulations is =  " + averageUtilization);
-                out.println("Average Utilization Standard Deviation for " + hName + " heuristic for " + no_of_simulations + " simulations is =  " + utilizationStandardDeviation);
-
-                out.println("Average Flowtime for " + hName + " heuristic for " + no_of_simulations + " simulations is =  " + averageFlowTime);
-                out.println("Flowtime Standard Deviation for " + hName + " heuristic for " + no_of_simulations + " simulations is =  " + flowtimeStandardDeviation);
-
-                out.println("Average Computation Time for " + hName + " heuristic for " + no_of_simulations + " simulations is =  " + averageComputationTime + "ms.");
-                out.println("Computation Time Standard Deviation for " + hName + " heuristic for " + no_of_simulations + " simulations is =  " + computationStandardDeviation + "ms.");
+//                out.println("\nAvg makespan for " + hName + " heuristic for " + no_of_simulations + " simulations is =  " + avgMakespan);
+//                out.println("Makespan Standard Deviation for " + hName + " heuristic for " + no_of_simulations + " simulations is =  " + standardDeviation);
+//
+//                out.println("Average Utilization for " + hName + " heuristic for " + no_of_simulations + " simulations is =  " + averageUtilization);
+//                out.println("Average Utilization Standard Deviation for " + hName + " heuristic for " + no_of_simulations + " simulations is =  " + utilizationStandardDeviation);
+//
+//                out.println("Average Flowtime for " + hName + " heuristic for " + no_of_simulations + " simulations is =  " + averageFlowTime);
+//                out.println("Flowtime Standard Deviation for " + hName + " heuristic for " + no_of_simulations + " simulations is =  " + flowtimeStandardDeviation);
+//
+//                out.println("Average Computation Time for " + hName + " heuristic for " + no_of_simulations + " simulations is =  " + averageComputationTime + "ms.");
+//                out.println("Computation Time Standard Deviation for " + hName + " heuristic for " + no_of_simulations + " simulations is =  " + computationStandardDeviation + "ms.");
             }
             if(bw != null)
                 bw.close();
@@ -304,23 +316,23 @@ public class Main {
         writer.close();
 
         long t2 = System.currentTimeMillis();
-        out.println("\nTotal time taken in the simulation = " + (t2 - t1) / 1000 + " sec.");
-        out.println("Minimum avg makespan = " + htype[avgMakespans.indexOf(Collections.min(avgMakespans))].toString());
-        out.println("Maximum avg makespan = " + htype[avgMakespans.indexOf(Collections.max(avgMakespans))].toString());
-        out.println("Minimum makespan standard deviation = " + htype[makespanStandardDeviations.indexOf(Collections.min(makespanStandardDeviations))].toString());
-        out.println("Maximum makespan standard deviation = " + htype[makespanStandardDeviations.indexOf(Collections.max(makespanStandardDeviations))].toString());
-
-        out.println("Minimum avg utilization = " + htype[avgUtilizationList.indexOf(Collections.min(avgUtilizationList))].toString());
-        out.println("Maximum avg utilization = " + htype[avgUtilizationList.indexOf(Collections.max(avgUtilizationList))].toString());
-
-        out.println("Minimum flowtime = " + htype[flowTimes.indexOf(Collections.min(flowTimes))].toString());
-        out.println("Maximum flowtime = " + htype[flowTimes.indexOf(Collections.max(flowTimes))].toString());
-
-        out.println("Minimum Computation Time = "
-                + htype[computationTimesList.indexOf(Collections.min(computationTimesList))].toString());
-
-        out.println("Maximum Computation Time = "
-                + htype[computationTimesList.indexOf(Collections.max(computationTimesList))].toString());
+//        out.println("\nTotal time taken in the simulation = " + (t2 - t1) / 1000 + " sec.");
+//        out.println("Minimum avg makespan = " + htype[avgMakespans.indexOf(Collections.min(avgMakespans))].toString());
+//        out.println("Maximum avg makespan = " + htype[avgMakespans.indexOf(Collections.max(avgMakespans))].toString());
+//        out.println("Minimum makespan standard deviation = " + htype[makespanStandardDeviations.indexOf(Collections.min(makespanStandardDeviations))].toString());
+//        out.println("Maximum makespan standard deviation = " + htype[makespanStandardDeviations.indexOf(Collections.max(makespanStandardDeviations))].toString());
+//
+//        out.println("Minimum avg utilization = " + htype[avgUtilizationList.indexOf(Collections.min(avgUtilizationList))].toString());
+//        out.println("Maximum avg utilization = " + htype[avgUtilizationList.indexOf(Collections.max(avgUtilizationList))].toString());
+//
+//        out.println("Minimum flowtime = " + htype[flowTimes.indexOf(Collections.min(flowTimes))].toString());
+//        out.println("Maximum flowtime = " + htype[flowTimes.indexOf(Collections.max(flowTimes))].toString());
+//
+//        out.println("Minimum Computation Time = "
+//                + htype[computationTimesList.indexOf(Collections.min(computationTimesList))].toString());
+//
+//        out.println("Maximum Computation Time = "
+//                + htype[computationTimesList.indexOf(Collections.max(computationTimesList))].toString());
 
     }
 
