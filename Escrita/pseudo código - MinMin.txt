@@ -1,0 +1,29 @@
+mat[máquina]: Este é o tempo estimado em que a máquina irá Ąnalizar o
+processamento das tarefas que estão designadas para ela.
+
+etc[tarefa][máquina]: Este é o tempo estimado que a máquina irá levar para
+processar esta tarefa.
+
+Pseudocódigo MinMin:
+
+Faça{
+    máquinaEscolhida = 0
+    tarefaEscolhida = 0
+    tempoMinimo = valor máximo positivo
+
+    para tarefa em tarefas{
+        se(foiRemovida[tarefa])
+            continue para a próxima iteração
+
+        para máquina em máquinas{
+            se (etc[tarefa][máquina] + mat[máquina] < tempoMinimo){
+                tempoMinimo = etc[tarefa][máquina] + mat[máquina]
+                máquinaEscolhida = máquina
+                tarefaEscolhida = tarefa
+            }
+        }
+    }
+    atribuir tarefaEscolhida para máquinaEscolhida
+    foiRemovida[tarefaEscolhida] = Verdadeiro
+
+}Enquanto(houver tarefas não atribuidas)

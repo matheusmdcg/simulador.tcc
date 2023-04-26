@@ -76,13 +76,13 @@ public class ETCGenerator {
             }
 
             for (int i = 0 ; i < n ; i++) { //numero de tasks
-                int N_t = rt.nextInt(T_t); //valor entre 0 e T_t(TASK_HETEROGENEITY)
+                int N_t = rt.nextInt(T_t) + 1; //valor entre 0 e T_t(TASK_HETEROGENEITY)
                 q[i] = N_t;
             }
             for (int i = 0 ; i < n ; i++) { //numero de tasks
                 for (int j = 0 ; j < m ; j++) { //numero de maquinas
-                    int N_m = rm.nextInt(T_m); //valor entre 0 e T_m(MACHINE_HETEROGENEITY)
-                    etc[i][j] = q[i] * N_m + 1;
+                    int N_m = rm.nextInt(T_m) + 1; //valor entre 0 e T_m(MACHINE_HETEROGENEITY)
+                    etc[i][j] = (q[i] * N_m);
                     if(bw != null){
                         bw.write(etc[i][j]+"");
                         bw.newLine();

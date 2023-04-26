@@ -4,6 +4,7 @@ import com.opencsv.CSVWriter;
 import com.opencsv.CSVWriterBuilder;
 
 import java.io.*;
+import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.*;
@@ -81,6 +82,14 @@ public class Main {
 //            no_of_simulations = Integer.parseInt(scannerUser.nextLine());
             no_of_simulations = 1;
 
+            System.out.println("heterogeneidade padrão alta: 3000");
+            System.out.println("heterogeneidade padrão baixa: 100");
+
+            System.out.println("Qual heterogeneidade das máquinas?");
+            mh.setNumericValue(Integer.parseInt(scannerUser.nextLine()));
+
+            System.out.println("Qual heterogeneidade das tarefas?");
+            th.setNumericValue(Integer.parseInt(scannerUser.nextLine()));
 
 
             System.out.println("Você quer salvar os dados gerados em um arquivo para utilizar em todas as simulações? S/N");
@@ -118,10 +127,10 @@ public class Main {
         System.out.println("Você quer executar todas as heuristicas? S/N");
         String todas = scannerUser.nextLine();
         if (todas.equalsIgnoreCase("S")){
-            heuristicas.addAll(Arrays.asList("MET", "MCT", "MinMin", "Sufferage", "MinMean", "MaxMin", "MinVar", "OLB"));
+            heuristicas.addAll(Arrays.asList("MET", "MCT", "MinMin", "XSuffrage", "MinMean", "MaxMin", "MinVar", "OLB", "MinMax"));
         }
         else {
-            System.out.println("Qual heuristica você quer executar?");
+            System.out.println("Qual heuristica você quer executar(por padrão o MET sempre será executado)?");
             String tempRead = scannerUser.nextLine();
 
             heuristicas.addAll(Arrays.asList("MET", tempRead));
@@ -130,6 +139,8 @@ public class Main {
 
 
         long t1 = System.currentTimeMillis();
+        long tempTemp = t1;
+        long tempTemp2 = t1;
 
 
         /*Specify the parameters here*/
@@ -203,8 +214,12 @@ public class Main {
 
                 //Antes chamava essa função, que não gerava uma nova simulação, só limpava o mat e a fila de prioridade: se.newSimulation(false);
 
-                if(heuristicas.get(j) == "MET")
-                    makespanMET = sigmaMakespan[j];
+                if (heuristicas.get(j) == "MET") makespanMET = sigmaMakespan[j];
+
+                tempTemp = System.currentTimeMillis();
+                out.println("Total time taken in the simulation = " + (tempTemp - tempTemp2) / 1000 + " sec.");
+                tempTemp2 = tempTemp;
+                out.println("---------------");
             }
         }
 
@@ -223,10 +238,10 @@ public class Main {
         CSVWriter writer = (CSVWriter) new CSVWriterBuilder(new FileWriter(fileNameResults+".csv"))
                 .withSeparator(',')
                 .build();
-        writer.writeNext(("Heuristica#Makespan#Utilização Média#FlowTime#ComputationTime#matchingProximity").split("#"));
+        writer.writeNext(("Heuristica#Makespan#Utilização Média#FlowTime#ComputationTime (miliseconds)#matchingProximity").split("#"));
         try{
-            fos = new FileOutputStream(resultados);
-            bw = new BufferedWriter(new OutputStreamWriter(fos));
+//            fos = new FileOutputStream(resultados);
+//            bw = new BufferedWriter(new OutputStreamWriter(fos));
 
             for (int j = 0; j < heuristicas.size(); j++) {
 
@@ -253,35 +268,46 @@ public class Main {
 
 
                 String hName = heuristicas.get(j);
-
-                bw.write("Heuristic Name:"+ hName);
-                bw.newLine();
-
-                bw.write("Average Makespan:"+ avgMakespan);
-                bw.newLine();
-//                bw.write("Standard Deviation makespan:"+ standardDeviation);
+//
+//                bw.write("Heuristic Name:"+ hName);
 //                bw.newLine();
-
-                bw.write("Average Utilization:"+ averageUtilization);
-                bw.newLine();
-//                bw.write("Standard Deviation Average Utilization:"+ utilizationStandardDeviation);
+//
+//                bw.write("Average Makespan:"+ avgMakespan);
 //                bw.newLine();
-
-                bw.write("Average flowtime:"+ averageFlowTime);
-                bw.newLine();
-//                bw.write("Standard Deviation Average flowtime:"+ flowtimeStandardDeviation);
+////                bw.write("Standard Deviation makespan:"+ standardDeviation);
+////                bw.newLine();
+//
+//                bw.write("Average Utilization:"+ averageUtilization);
 //                bw.newLine();
-
-                bw.write("Average Computation Time:"+ averageComputationTime);
-                bw.newLine();
-//                bw.write("Standard Deviation Average Computation Time:"+ computationStandardDeviation);
+////                bw.write("Standard Deviation Average Utilization:"+ utilizationStandardDeviation);
+////                bw.newLine();
+//
+//                bw.write("Average flowtime:"+ averageFlowTime);
 //                bw.newLine();
-                bw.newLine();
+////                bw.write("Standard Deviation Average flowtime:"+ flowtimeStandardDeviation);
+////                bw.newLine();
+//
+//                bw.write("Average Computation Time:"+ averageComputationTime);
+//                bw.newLine();
+////                bw.write("Standard Deviation Average Computation Time:"+ computationStandardDeviation);
+////                bw.newLine();
+//                bw.newLine();
 
                 double matchingProximity = (double)avgMakespan / (double)makespanMET;
 
+//                out.println(hName);
+//                out.println("matchingProximity para bigDecimal:" +BigDecimal.valueOf(matchingProximity));
+//                out.println("matchingProximity para bigDecimal com setscale:" +BigDecimal.valueOf(matchingProximity).setScale(3, RoundingMode.CEILING));
+//                out.println("String value of:" +String.valueOf(BigDecimal.valueOf(matchingProximity).setScale(3, RoundingMode.CEILING)));
+//                out.println("to String:" +(BigDecimal.valueOf(matchingProximity).setScale(3, RoundingMode.CEILING)).toString());
 
-                String[] entries = {hName, String.valueOf(avgMakespan), String.valueOf(averageUtilization), String.valueOf(averageFlowTime), String.valueOf(averageComputationTime), String.valueOf(matchingProximity)};
+
+                String[] entries = {hName,
+                        String.valueOf(BigDecimal.valueOf(avgMakespan).setScale(3, RoundingMode.CEILING)),
+                        String.valueOf(BigDecimal.valueOf(averageUtilization).setScale(3, RoundingMode.CEILING)),
+                        String.valueOf(BigDecimal.valueOf(averageFlowTime).setScale(3, RoundingMode.CEILING)),
+                        String.valueOf(BigDecimal.valueOf(averageComputationTime)),
+                        String.valueOf(BigDecimal.valueOf(matchingProximity).setScale(3, RoundingMode.CEILING))};
                 writer.writeNext(entries);
 
 

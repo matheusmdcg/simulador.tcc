@@ -18,4 +18,9 @@ public enum TaskHeterogeneity {
      public int getNumericValue(){
         return h;
      }
+
+    public boolean setNumericValue(int het){
+        this.h=het;
+        return true;
+    }
 }

@@ -18,4 +18,9 @@ public enum MachineHeterogeneity {
     public int getNumericValue(){
         return h;
     }
+
+    public boolean setNumericValue(int het){
+        this.h=het;
+        return true;
+    }
 }

@@ -1,0 +1,67 @@
+mat[máquina]: Este é o tempo estimado em que a máquina irá Ąnalizar o
+processamento das tarefas que estão designadas para ela.
+
+etc[tarefa][máquina]: Este é o tempo estimado que a máquina irá levar para
+processar esta tarefa.
+
+Pseudocódigo MinMean:
+
+Execute o Min-Min
+
+Para máquina em máquinas
+    tempoConclusãoTotal = mat[máquina]
+média = tempoConclusãoTotal/ qtdmáquinas;
+
+Para máquina em máquinas
+    variancia  = variancia + (mat[máquina]-média)²
+variancia = variancia/qtdmáquinas;
+
+
+Para máquina em máquinas {
+    Se (mat[máquina] < média)
+        continue para a próxima iteração
+
+    double difMatMedia = (mat[máquina]-média)²
+
+    Se (difMatMedia < variancia)
+        continue para a próxima iteração
+
+    Para tarefa em (tarefas atribuídas a máquina){
+        difMatMediaPossible = 0;
+        delta = 0;
+    
+        Para máquinaCandidata em máquinas{
+            Se (máquinaCandidata == máquina)
+                continue para a próxima iteração
+
+
+            Se (mat[máquinaCandidata] < média){
+                difMatMediaPossible = ( (mat[máquinaCandidata] + etc[tarefa][máquinaCandidata]) - média)²
+            }
+
+            Senão{
+                difMatMediaPossible = (mat[máquinaCandidata] - média)²
+                Se(difMatMediaPossible > variancia)
+                    continue;
+                
+                difMatMediaPossible = ( (mat[máquinaCandidata] + etc[tarefa][máquinaCandidata]) - média)²
+                //Pode ser maior que a média, mas o importante é que a diferença entre o mat e a média não seja maior que a variancia
+            }
+
+            Se(difMatMediaPossible > variancia)
+                continue;
+
+            Se(difMatMediaPossible <= variancia) {
+                Se ((variancia - difMatMediaPossible) >= delta){
+                    delta = variancia - difMatMediaPossible;
+                    máquinaEscolhida = máquinaCandidata;
+                }
+            }
+        }
+        Se (delta > 0){
+            remover tarefa da máquina
+            atribuir tarefa para máquinaEscolhida
+        }
+    }
+
+}

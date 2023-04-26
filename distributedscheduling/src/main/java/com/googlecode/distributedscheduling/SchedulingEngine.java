@@ -53,16 +53,19 @@ public class SchedulingEngine {
             schedule_MCT(metaSet,currentTime);
         else if(heuristic.equals("MinMin"))
             schedule_MinMin(metaSet,currentTime);
-        else if(heuristic.equals("Sufferage"))
-            schedule_Sufferage(metaSet,currentTime);
+        else if(heuristic.equals("XSuffrage"))
+            schedule_XSuffrage(metaSet,currentTime);
         else if(heuristic.equals("MinMean"))
             schedule_MinMean(metaSet,currentTime);
         else if(heuristic.equals("MaxMin"))
             schedule_MaxMin(metaSet,currentTime);
         else if(heuristic.equals("MinVar"))
-            schedule_MinVar(metaSet,currentTime);
+            schedule_MinVar2(metaSet,currentTime);
         else if(heuristic.equals("OLB"))
             schedule_olb(metaSet);
+        else if(heuristic.equals("MinMax"))
+            schedule_MinMax(metaSet,currentTime);
+
 //        else if(h==Heuristic.Random)
 //            schedule_Random(metaSet);
 
@@ -84,25 +87,16 @@ public class SchedulingEngine {
         for(int i=0;i<metaSet.size();i++){//para cada tarefa
             minExecTime = Integer.MAX_VALUE;
             Task t=metaSet.elementAt(i);
-//            out.println("-----------------\nMET\ntask:"+t.tid);
-//            out.println("task number:"+i);
             for(int j=0;j<sim.m;j++){ //para cada máquina
                 if( sim.etc[t.tid][j] < minExecTime){
-                    //sim.etc[t.tid][j] ou etc[tarefa][maquina]
-                    //Tempo estimado que a máquina irá levar para processar esta tarefa.
-//                    out.println("Machine Number:"+j);
-//                    out.println(sim.etc[t.tid][j] + " < " + minExecTime);
                     minExecTime=sim.etc[t.tid][j];
                     machine=j;
                 }
             }
-//            out.println("Final:");
-//            out.println("minExecTime:"+minExecTime);
-//            out.println("machine:"+machine);
+
             sim.mapTask(t, machine);
-            //out.println("Adding task "+t.tid+" to machine "+machine+". Completion time = "+t.cTime+" @time "+currentTime);
         }
-        //out.println("________Return from schedule_________");///////////////
+
     }
 
     private void schedule_MCT(Vector<Task> metaSet,int currentTime){
@@ -113,29 +107,20 @@ public class SchedulingEngine {
         for(int i=0;i<metaSet.size();i++){
             minComplTime=Integer.MAX_VALUE;
             Task t=metaSet.elementAt(i);
-//            out.println("-----------------\nMCT\ntask:"+t.tid);
+
             for(int j=0;j<sim.m;j++){
                 if( sim.etc[t.tid][j] + sim.mat[j] < minComplTime){
                     minComplTime= (sim.etc[t.tid][j] + sim.mat[j]);
                     machine=j;
-//                    out.println("********");
-//                    out.println("sim.etc[t.tid][j]:"+sim.etc[t.tid][j]);
-//                    out.println("sim.mat[j]:"+sim.mat[j]);
+
                 }
             }
-//            out.println("Final:");
-//            out.println("minComplTime:"+minComplTime);
-//            out.println("machine:"+machine);
+
             sim.mapTask(t, machine);
-            //out.println("Adding task "+t.tid+" to machine "+machine+". Completion time = "+t.cTime+" @time "+currentTime);//////
         }
-        //out.println("________Return from schedule_________");///////////////
     }
 
     private void schedule_MinMin(Vector<Task> metaSet, int currentTime){
-//        out.println("MinMIn metaset size:"+metaSet.size());
-//        out.println("---------------");
-//        out.println("Min Min");
         /*We do not actually delete the task from the meta-set rather mark it as removed*/
         boolean[] isRemoved=new boolean[metaSet.size()];
 
@@ -161,11 +146,6 @@ public class SchedulingEngine {
                     }
                 }
             }
-//            out.println("Final");
-//            out.println("Task:"+taskNo);
-//            out.println("Machine:"+machine);
-//            out.println("minTime:"+minTime);
-
 
             Task t=metaSet.elementAt(taskNo);//pegar no meta-set a task
             sim.mapTask(t, machine);
@@ -214,17 +194,12 @@ public class SchedulingEngine {
                 machine=-1;
                 if(isRemoved[i]) continue;
                 for(int j=0;j<sim.m;j++){
-//                    out.println("J = "+ j);
-//                    out.println("I = "+ i);
                     if(c[i][j]<minTime){
                         minTime=c[i][j];
                         machine=j;
-//                        out.println("minTime = "+ minTime);
-//                        out.println("machine = "+ machine);
                     }
                 }
                 minComplTime[i]=minTime;
-//                out.println("minComplTime["+i+"] = "+ minComplTime[i]);
                 minComplMachine[i]=machine;
 
                 if(maxMinComplTime<minComplTime[i]){
@@ -233,33 +208,88 @@ public class SchedulingEngine {
                 }
             }
 
-            /*Find the task which has the maximum minimum completion time*/
-//            double maxMinComplTime=Integer.MIN_VALUE;
-//            for(int l=0;l<metaSet.size();l++){
-//                if(isRemoved[l]) continue;
-//                if(maxMinComplTime<minComplTime[l]){
-//                    maxMinComplTime=minComplTime[l];
-//                    taskNo=l;
-//                }
-//            }
-
             Task t=metaSet.elementAt(taskNo);
             machine=minComplMachine[taskNo];
-
-//            out.println("--------\nFinal");
-//            out.println("Task:"+taskNo);
-//            out.println("Machine:"+machine);
-//            out.println("maxMinComplTime:"+maxMinComplTime);
 
             sim.mapTask(t, machine);
 
             /*Mark this task as removed*/
             tasksRemoved++;
             isRemoved[taskNo]=true;
-//            out.println("****Task "+ taskNo+" foi removida:"+isRemoved[taskNo] );
             //metaSet.remove(taskNo);
 
             /*Update c[][] Matrix for other tasks in the meta-set*/
+            for(i=0;i<metaSet.size();i++){
+                if(isRemoved[i])
+                    continue;
+                else{
+                    c[i][machine]= (sim.mat[machine]+sim.etc[metaSet.get(i).tid][machine]);
+                }
+            }
+
+        }while(tasksRemoved!=metaSet.size());
+    }
+
+    private void schedule_MinMax(Vector<Task> metaSet, int currentTime){
+
+        /*We do not actually delete the task from the meta-set rather mark it as removed*/
+        boolean[] isRemoved=new boolean[metaSet.size()];
+
+        /*Matrix to contain the completion time of each task in the meta-set on each machine.*/
+        double c[][]=schedule_MinMinHelper(metaSet);
+        int i=0;
+
+        /*Minimum Completion Time of the ith task in the meta set*/
+        double[] minComplTime=new double[metaSet.size()];
+        double[] maxComplTime=new double[metaSet.size()];
+        int[] minComplMachine=new int[metaSet.size()];
+
+        int tasksRemoved=0;
+        do{
+            double maxTime=Integer.MIN_VALUE;
+            double minTime=Integer.MAX_VALUE;
+            double maxMinComplTime=Integer.MIN_VALUE;
+
+            int machine=-1;
+            int taskNo=-1;
+            for(i=0;i<metaSet.size();i++){
+                maxTime=Integer.MIN_VALUE;
+                minTime=Integer.MAX_VALUE;
+                machine=-1;
+                if(isRemoved[i]) continue;
+                for(int j=0;j<sim.m;j++){
+
+                    if(c[i][j] > maxTime)
+                        maxTime = c[i][j];
+
+                    if(c[i][j] < minTime){
+                        minTime = c[i][j];
+                        machine = j;
+                    }
+                }
+                maxComplTime[i] = maxTime;      //[1]125; [2]40; [3]50; [4]200
+                minComplTime[i] = minTime;      //[1]50;  [2]20; [3]10; [4]50
+                minComplMachine[i] = machine;   //[1]2;   [2]3;  [3]3;  [4]3
+
+                if(maxComplTime[i] > maxMinComplTime){
+                    maxMinComplTime = maxComplTime[i];//125; 200
+                    taskNo = i;//1; 4
+//                    out.println("maxMinComplTime: "+ maxMinComplTime);
+//                    out.println("taskNo: "+ taskNo);
+//                    out.println("Machine: "+ minComplMachine[i]);
+                }
+            }
+
+            Task t=metaSet.elementAt(taskNo);
+            machine=minComplMachine[taskNo];
+//            out.println("//////////////////////////////");
+//            out.println("machine: "+ machine);
+//            out.println("task: "+ taskNo);
+            sim.mapTask(t, machine);//task 4, machine 3
+
+            tasksRemoved++;
+            isRemoved[taskNo]=true;
+
             for(i=0;i<metaSet.size();i++){
                 if(isRemoved[i])
                     continue;
@@ -392,6 +422,88 @@ public class SchedulingEngine {
         System.arraycopy(matCopy, 0, sim.mat, 0, sim.m);
     }
 
+    private void schedule_XSuffrage(Vector<Task> metaSet, int currentTime) {
+
+        /*We do not actually delete the task from the meta-set rather mark it as removed*/
+        boolean[] isRemoved=new boolean[metaSet.size()];
+
+        /*Matrix to contain the completion time of each task in the meta-set on each machine.*/
+        double c[][]=schedule_MinMinHelper(metaSet);
+
+        /*Sufferage value of all tasks*/
+        double suffrage;
+
+        int tasksRemoved=0;
+        do{
+            double minTime1 = Integer.MAX_VALUE;
+            double minTime2 = Integer.MAX_VALUE;
+            int machine1=-1;
+            int machine2=-1;
+
+            int machine=-1;
+            int taskNo=-1;
+
+            double suffrageMax = Integer.MIN_VALUE;
+            suffrage = Integer.MIN_VALUE;
+
+
+            /*For tasks in the meta set,find machine on which it has the earliest and 2nd earliest completion time*/
+            for(int i=0;i<metaSet.size();i++){
+                if(isRemoved[i])continue;
+
+                /*Earliest completion time machine*/
+                for(int j=0;j<sim.m;j++){
+                    if(c[i][j]<minTime1){
+                        minTime1=c[i][j];
+                        machine1=j;
+                    }
+                }
+                /*2nd earliest completion time machine*/
+                for(int j=0;j<sim.m;j++){
+                    if(j!=machine1 && c[i][j]<minTime2 ){
+                        minTime2=c[i][j];
+                        machine2=j;
+                    }
+                }
+                suffrage= minTime2-minTime1;
+
+                if(suffrage > suffrageMax){
+                    machine = machine1;
+                    taskNo = i;
+//                    out.println("tarefa "+ (taskNo+1));
+//                    out.println("machine: "+ (machine+1));
+//                    out.println("Diferença: "+minTime2+" - "+minTime1);
+//                    out.println("suffrage "+suffrage+" > "+ suffrageMax);
+                    suffrageMax = suffrage;
+                }
+                else {
+//                    out.println("Diferença não foi o suficiente: "+minTime2+" - "+minTime1);
+//                    out.println("suffrage "+suffrage+" < "+ suffrageMax);
+                }
+                minTime1 = Integer.MAX_VALUE;
+                minTime2 = Integer.MAX_VALUE;
+
+            }
+
+            Task t=metaSet.elementAt(taskNo);//pegar no meta-set a task
+//            out.println("tarefa Escolhida: "+ (taskNo+1));
+//            out.println("maquina escolhida: "+ (machine+1));
+//            out.println("**********************");
+            sim.mapTask(t, machine);
+            tasksRemoved++;
+            isRemoved[taskNo]=true;
+
+            for(int i=0;i<metaSet.size();i++){
+                if(isRemoved[i])
+                    continue;
+                else{
+                    c[i][machine]= (sim.mat[machine]+sim.etc[metaSet.get(i).tid][machine]);
+                }
+            }
+
+        }while(tasksRemoved!=metaSet.size());
+    }
+
 
     /*This function is a helper of schedule_Sufferage()*/
     private void mapTaskCopy(Task t, int machine, Vector<TaskWrapper> pCopy[], double mat[],int index){
@@ -427,10 +539,12 @@ public class SchedulingEngine {
         avgComplTime=sigmaComplTime/sim.m;
         int k=0;
         /*Reshufffle tasks from machines which have higher completion time than average to lower compl time machines*/
-        for(int i=0;i<sim.m;i++){
-            if(matCopy[i]<=avgComplTime)continue;
+        for(int i=0;i<sim.m;i++){ //Para máquina em máquinas
+//            if(matCopy[i]<=0)continue;
+            if(matCopy[i]<=avgComplTime)continue;//Não preciso mudar as tarefas já designadas que tem um mat menor que a média
             k=0;
-            while(k+1<=pCopy[i].size()){
+//            out.println("matcopy maior que a média:"+ matCopy[i] + " > "+ avgComplTime );
+            while(k < pCopy[i].size()){ //Para tarefa em (tarefas atribuídas a máquina)
                 TaskWrapper tw=pCopy[i].elementAt(k);
                 Task t=tw.getTask();
                 /*Remap this task to another machine with completion time less than average completion time
@@ -438,13 +552,23 @@ public class SchedulingEngine {
                  -tion time becomes the minimum.
                  This is analogous to best-fit algorithm
                 */
-                int delta=Integer.MIN_VALUE;
+                double delta=0;
                 int machine=i;
-                for(int j=0;j<sim.m;j++){
+                double matEtc;
+                for(int j=0;j<sim.m;j++){ //Para máquinaCandidata em máquinas
                     if(j==i || matCopy[j]>=avgComplTime)continue;
-                    if(( matCopy[j]+sim.etc[t.tid][j] < avgComplTime) && Math.abs( matCopy[j]+sim.etc[t.tid][j] - avgComplTime) > delta){
-                        delta= (int) Math.abs( matCopy[j]+sim.etc[t.tid][j] - avgComplTime);
-                        machine=j;
+                    if(( matCopy[j]+sim.etc[t.tid][j]) < avgComplTime) {
+                        matEtc = (matCopy[j] + sim.etc[t.tid][j]);
+                        if ((avgComplTime - matEtc) > delta) {
+//                            out.println("avgComplTime:" + avgComplTime);
+//                            out.println("matETC:" + matEtc);
+//                            out.println("delta antigo:" + delta);
+                            delta = (avgComplTime - matEtc);
+                            machine = j;
+//                            out.println("delta novo:" + delta);
+//                            out.println("task:" + (i+1));
+//                            out.println("machine:" + (j+1));
+                        }
                     }
                 }
                 /*Map the task to the new machine*/
@@ -459,6 +583,8 @@ public class SchedulingEngine {
                     //avgComplTime=sigmaComplTime/sim.m;
                     /*Not included because it increases makespan slightly*/
                 }
+//                else
+//                    out.println("não encontrei nenhuma máquina que fizesse alguma das tarefas mais rápido e a média ficasse menor");
                 k++;
             }
         }
@@ -485,10 +611,12 @@ public class SchedulingEngine {
 
         int tasksRemoved=0;
         do{
-            double minTime=Integer.MAX_VALUE;
+            double minTime;
             int machine=-1;
             int taskNo=-1;
             /*Find the task in the meta set with the earliest completion time and the machine that obtains it.*/
+
+            minTime = Integer.MAX_VALUE;
             for(i=0;i<metaSet.size();i++){
                 if(isRemoved[i])continue;
                 for(int j=0;j<sim.m;j++){
@@ -509,7 +637,8 @@ public class SchedulingEngine {
 
             /*Update c[][] Matrix for other tasks in the meta-set*/
             for(i=0;i<metaSet.size();i++){
-                if(isRemoved[i])continue;
+                if(isRemoved[i])
+                    continue;
                 else{
                     c[i][machine]=matCopy[machine]+sim.etc[metaSet.get(i).tid][machine];
                 }
@@ -560,14 +689,15 @@ public class SchedulingEngine {
         for(int i=0;i<sim.m;i++){
             if(matCopy[i]<=avgComplTime)continue;
             k=0;
-            while(k+1<=pCopy[i].size()){
+            out.println("matcopy maior que a média:"+ matCopy[i] + " > "+ avgComplTime );
+            while(k < pCopy[i].size()){
                 TaskWrapper tw=pCopy[i].elementAt(k);
                 Task t=tw.getTask();
                 int deltaVar=0;
                 int minDeltaVar=Integer.MAX_VALUE;
 
-                long newSigmaComplTime=sigmaComplTime;
-                long newAvgComplTime=avgComplTime;
+                long newSigmaComplTime = sigmaComplTime;
+                long newAvgComplTime = avgComplTime;
 
                 int machine=i;
                 int delta=Integer.MIN_VALUE;
@@ -580,14 +710,22 @@ public class SchedulingEngine {
                     newAvgComplTime=newSigmaComplTime/sim.m;
 
                     deltaVar-=(int) Math.pow((matCopy[i] - avgComplTime),2);
-                    deltaVar+=(int) Math.pow((matCopy[i]-sim.etc[t.tid][i]-newAvgComplTime),2);
-                    deltaVar-=(int) Math.pow((matCopy[j]-avgComplTime),2);
-                    deltaVar+=(int) Math.pow((matCopy[j]+sim.etc[t.tid][j]-newAvgComplTime),2);
+                    deltaVar+=(int) Math.pow((matCopy[i] - sim.etc[t.tid][i]-newAvgComplTime),2);
+                    deltaVar-=(int) Math.pow((matCopy[j] - avgComplTime),2);
+                    deltaVar+=(int) Math.pow((matCopy[j] + sim.etc[t.tid][j]-newAvgComplTime),2);
 
-                    if(( matCopy[j]+sim.etc[t.tid][j] < avgComplTime) && Math.abs( matCopy[j]+sim.etc[t.tid][j] - avgComplTime) > delta && deltaVar<0 && deltaVar<minDeltaVar){
+                    if(( matCopy[j]+sim.etc[t.tid][j] < avgComplTime) && Math.abs( matCopy[j]+sim.etc[t.tid][j] - avgComplTime) > delta && deltaVar < 0 && deltaVar < minDeltaVar){
+                        out.println("avgComplTime:" + avgComplTime);
+                        out.println("delta antigo:" + delta);
+                        out.println("deltaVar antigo:" + deltaVar);
+                        out.println("delta antigo:" + delta);
                         minDeltaVar=deltaVar;
                         delta= (int) Math.abs( matCopy[j]+sim.etc[t.tid][j] - avgComplTime);
                         machine=j;
+                        out.println("delta novo:" + delta);
+                        out.println("deltaVar novo:" + deltaVar);
+                        out.println("task:" + (i+1));
+                        out.println("machine:" + (j+1));
                     }
 
                     newSigmaComplTime=sigmaComplTime;
@@ -619,6 +757,136 @@ public class SchedulingEngine {
         System.arraycopy(matCopy, 0, sim.mat, 0, sim.m);
     }
 
+    private void schedule_MinVar2(Vector<Task> metaSet, int currentTime) {
+        /*We don't directly add the tasks to the p[] matrix of simulator rather add in this copy first*/
+        Vector<TaskWrapper> pCopy[]=new Vector[sim.m];
+
+        /*Copy of mat matrix*/
+        double[] matCopy=new double[sim.m];
+        for(int i=0;i<sim.m;i++){
+            matCopy[i]= sim.mat[i];
+            /*Also initialize the processors Copy , pCopy[]*/
+            pCopy[i]=new Vector<TaskWrapper>(4);
+        }
+
+        /*First schedule that tasks according to min-min*/
+        schedule_MinMinCopy(metaSet,currentTime,pCopy,matCopy);
+
+        /*Find avg completion time for each machine*/
+        long sigmaComplTime = 0;
+        long avgComplTime = 0;
+        double variancia = 0;
+        for(int i=0;i<sim.m;i++)
+            sigmaComplTime+=matCopy[i];
+        avgComplTime = sigmaComplTime/sim.m;
+
+        for(int i=0;i<sim.m;i++)
+            variancia += Math.pow((matCopy[i]-avgComplTime), 2);
+        variancia = variancia/sim.m;
+
+        int k=0;
+        /*Reshuffle tasks so that the variance decreases*/
+        for(int i=0;i<sim.m;i++){
+//            long sigmaComplTime = 0;
+//            long avgComplTime = 0;
+//            double variancia = 0;
+//            for(int l=0;l<sim.m;l++)
+//                sigmaComplTime+=matCopy[l];
+//            avgComplTime = sigmaComplTime/sim.m;
+//
+//            for(int l=0;l<sim.m;l++)
+//                variancia += Math.pow((matCopy[l]-avgComplTime), 2);
+//            variancia = variancia/sim.m;
+//            out.println("maquina"+ (i+1)+"****");
+            if(matCopy[i] < avgComplTime)
+                continue;
+//            if(matCopy[i] <= 0)
+//                continue;
+
+            double difMatMedia = Math.pow((matCopy[i]-avgComplTime), 2); //a diferença ao quadrado entre o mat[maquina] e a média
+
+            if(difMatMedia < variancia)
+                continue;
+
+//            out.println("difMatMedia maior ou igual a variancia:"+ difMatMedia + " >= "+ variancia );
+            k=0;
+            while(k < pCopy[i].size()){
+                TaskWrapper tw=pCopy[i].elementAt(k);
+                Task t=tw.getTask();
+
+                double difMatMediaPossible = 0;
+                double delta = 0;
+
+                int machine=i;
+                double matEtc;
+                for(int j=0;j<sim.m;j++){ //Para máquinaCandidata em máquinas
+//                    out.println("maquina candidata "+ (j+1)+" *@*@*@*");
+                    if(j==i)
+                        continue;
+
+
+                    if(matCopy[j] < avgComplTime){
+                        difMatMediaPossible = Math.pow((matCopy[j]+sim.etc[t.tid][j])-avgComplTime, 2);
+//                        out.println("matCopy[j]:"+ matCopy[j] + " < "+ "avgComplTime:"+avgComplTime );
+//                        out.println("difMatMediaPossible: "+ difMatMediaPossible );
+                    }
+
+                    else{
+                        difMatMediaPossible = Math.pow((matCopy[j]-avgComplTime), 2);
+//                        out.println("difMatMediaPossible só com o mat original:"+ difMatMediaPossible);
+                        if(difMatMediaPossible > variancia)
+                            continue;
+                        difMatMediaPossible = Math.pow((matCopy[j]+sim.etc[t.tid][j])-avgComplTime, 2);
+                    }
+
+                    if(difMatMediaPossible > variancia)
+                        continue;
+//                    out.println("difMatMediaPossible menor igual a variancia:"+ difMatMediaPossible + " <= "+ variancia );
+
+                    if(difMatMediaPossible <= variancia) {
+                        if ((variancia - difMatMediaPossible) >= delta){
+//                            out.println("avgComplTime:" + avgComplTime);
+//                            out.println("difMatMediaPossible:" + difMatMediaPossible);
+//                            out.println("variancia:" + variancia);
+//                            out.println("delta antigo:" + delta);
+                            delta = variancia - difMatMediaPossible;
+                            machine = j;
+//                            out.println("delta novo:" + delta);
+//                            out.println("task:" + (i+1));
+//                            out.println("machine:" + (j+1));
+                        }
+//                        else {
+//                            out.println("variancia - difMatMediaPossible < delta");
+//                            out.println("variancia::"+variancia);
+//                            out.println("difMatMediaPossible::"+difMatMediaPossible);
+//                            out.println("delta::"+delta);
+//
+//                        }
+                    }
+                }
+                /*Map the task to the new machine*/
+                if(machine!=i){
+                    pCopy[i].remove(tw);
+                    matCopy[i]-=sim.etc[t.tid][i];
+                    mapTaskCopy(t,machine,pCopy,matCopy,tw.getIndex());
+
+                }
+//                else
+//                    out.println("não encontrei nenhuma máquina que fizesse alguma das tarefas mais rápido e a média ficasse menor");
+                k++;
+            }
+        }
+        /*Copy matCopy[] and pCopy[] back to original matrices*/
+        for(int i=0;i<sim.m;i++){
+            for(int j=0;j<pCopy[i].size();j++){
+                TaskWrapper tbu=pCopy[i].elementAt(j);
+                sim.mapTask(tbu.getTask(), i);
+            }
+        }
+        /*By doing this we are preserving the order in which tasks should have been mapped to the machines*/
+        System.arraycopy(matCopy, 0, sim.mat, 0, sim.m);
+    }
+
 
     private void schedule_olb(Vector<Task> metaSet) {
 
@@ -628,10 +896,13 @@ public class SchedulingEngine {
             int machine = 0;
             for (int j = 0; j < sim.m; j++) {
                 if (sim.mat[j] < minMatTime) {
+//                    out.println(sim.mat[j]+"<"+minMatTime);
                     minMatTime = sim.mat[j];
                     machine = j;
                 }
             }
+//            out.println("Task:"+(i+1));
+//            out.println("Máquina:"+(machine+1));
             sim.mapTask(t, machine);
             //out.println("Adding task "+t.tid+" to machine "+machine+". Completion time = "+t.cTime+" @time "+currentTime);//////
         }
