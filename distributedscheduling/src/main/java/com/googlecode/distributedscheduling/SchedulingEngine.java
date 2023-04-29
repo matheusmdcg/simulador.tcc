@@ -53,8 +53,8 @@ public class SchedulingEngine {
             schedule_MCT(metaSet,currentTime);
         else if(heuristic.equals("MinMin"))
             schedule_MinMin(metaSet,currentTime);
-        else if(heuristic.equals("XSuffrage"))
-            schedule_XSuffrage(metaSet,currentTime);
+        else if(heuristic.equals("XSufferage"))
+            schedule_XSufferage(metaSet,currentTime);
         else if(heuristic.equals("MinMean"))
             schedule_MinMean(metaSet,currentTime);
         else if(heuristic.equals("MaxMin"))
@@ -422,7 +422,7 @@ public class SchedulingEngine {
         System.arraycopy(matCopy, 0, sim.mat, 0, sim.m);
     }
 
-    private void schedule_XSuffrage(Vector<Task> metaSet, int currentTime) {
+    private void schedule_XSufferage(Vector<Task> metaSet, int currentTime) {
 
         /*We do not actually delete the task from the meta-set rather mark it as removed*/
         boolean[] isRemoved=new boolean[metaSet.size()];
@@ -431,7 +431,7 @@ public class SchedulingEngine {
         double c[][]=schedule_MinMinHelper(metaSet);
 
         /*Sufferage value of all tasks*/
-        double suffrage;
+        double sufferage;
 
         int tasksRemoved=0;
         do{
@@ -443,8 +443,8 @@ public class SchedulingEngine {
             int machine=-1;
             int taskNo=-1;
 
-            double suffrageMax = Integer.MIN_VALUE;
-            suffrage = Integer.MIN_VALUE;
+            double sufferageMax = Integer.MIN_VALUE;
+            sufferage = Integer.MIN_VALUE;
 
 
             /*For tasks in the meta set,find machine on which it has the earliest and 2nd earliest completion time*/
@@ -465,20 +465,20 @@ public class SchedulingEngine {
                         machine2=j;
                     }
                 }
-                suffrage= minTime2-minTime1;
+                sufferage= minTime2-minTime1;
 
-                if(suffrage > suffrageMax){
+                if(sufferage > sufferageMax){
                     machine = machine1;
                     taskNo = i;
 //                    out.println("tarefa "+ (taskNo+1));
 //                    out.println("machine: "+ (machine+1));
 //                    out.println("Diferença: "+minTime2+" - "+minTime1);
-//                    out.println("suffrage "+suffrage+" > "+ suffrageMax);
-                    suffrageMax = suffrage;
+//                    out.println("sufferage "+sufferage+" > "+ sufferageMax);
+                    sufferageMax = sufferage;
                 }
                 else {
 //                    out.println("Diferença não foi o suficiente: "+minTime2+" - "+minTime1);
-//                    out.println("suffrage "+suffrage+" < "+ suffrageMax);
+//                    out.println("sufferage "+sufferage+" < "+ sufferageMax);
                 }
                 minTime1 = Integer.MAX_VALUE;
                 minTime2 = Integer.MAX_VALUE;

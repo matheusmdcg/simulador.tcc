@@ -123,8 +123,11 @@ public class SimulatorEngine {
         makespan=0;
         sigma=0;
         if(alwaysGenerateETC)
-            if(fileName == null)
+            if(fileName == null){
+//                out.println("File name Null, vou gerar random de novo");
                 generateRandom(null);
+            }
+
 
         for(int i=0;i<m;i++){
             mat[i]=0;

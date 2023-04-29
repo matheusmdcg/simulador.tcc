@@ -10,6 +10,7 @@ import java.text.DecimalFormat;
 import java.util.*;
 
 import static java.lang.System.out;
+import static java.lang.System.setOut;
 
 /**
  * @author apurv verma
@@ -21,9 +22,9 @@ public class Main {
         boolean alwaysGenerateETC = false;
 
         /*Specify the parameters here*/
-        int NUM_MACHINES = 3;//256;
-        int NUM_TASKS = 10;//8192;
-        int no_of_simulations = 2000;
+        int NUM_MACHINES = 0; //256;
+        int NUM_TASKS = 0; //8192;
+        int no_of_simulations = 1;
 
         double ARRIVAL_RATE = 19;
         int metaSetSize = 64;
@@ -38,8 +39,7 @@ public class Main {
         TaskHeterogeneity th = TH.HIGH;
         MachineHeterogeneity mh = MH.HIGH;
 
-//        System.out.println("TASK_HETEROGENEITY: "+ th);
-//        System.out.println("MACHINE_HETEROGENEITY: "+ mh);
+
 
         Scanner scannerUser = new Scanner(System.in);
         System.out.println("Você quer pegar os dados de um arquivo? S/N");
@@ -48,9 +48,6 @@ public class Main {
             byFile = true;
             System.out.println("Qual o nome do arquivo que você quer ler?");
                 fileName = "./instancias/"+scannerUser.nextLine();
-//            System.out.println("Quantas simulações?");
-//            no_of_simulations = Integer.parseInt(scannerUser.nextLine());
-            no_of_simulations = 1;
             try {
 
                 System.out.println("Vou ler o arquivo então");
@@ -85,17 +82,18 @@ public class Main {
             System.out.println("heterogeneidade padrão alta: 3000");
             System.out.println("heterogeneidade padrão baixa: 100");
 
+            System.out.println("Qual heterogeneidade das tarefas? Digite um número inteiro");
+            th.setNumericValue(Integer.parseInt(scannerUser.nextLine()));
+
             System.out.println("Qual heterogeneidade das máquinas?");
             mh.setNumericValue(Integer.parseInt(scannerUser.nextLine()));
 
-            System.out.println("Qual heterogeneidade das tarefas?");
-            th.setNumericValue(Integer.parseInt(scannerUser.nextLine()));
 
-
-            System.out.println("Você quer salvar os dados gerados em um arquivo para utilizar em todas as simulações? S/N");
+            System.out.println("Você quer salvar os dados gerados em um arquivo para utilizar em simulações futuras? S/N");
             if (scannerUser.nextLine().equalsIgnoreCase("S")) {
                 System.out.println("Qual o nome do arquivo?");
-                fileNamenew = scannerUser.nextLine();
+                fileNamenew =  scannerUser.nextLine();
+                fileNamenew = "./instancias/"+fileNamenew;
                 File newFile = new File(fileNamenew);
                 boolean result;
                 try {
@@ -112,9 +110,9 @@ public class Main {
                 }
             }
             else{
-                System.out.println("Você quer gerar um ETC novo para cada nova simulação?S/N");
-                if (scannerUser.nextLine().equalsIgnoreCase("S"))
-                    alwaysGenerateETC = true;
+                System.out.println("Já que não vai ser o mesmo arquivo, quer gerar quantas simulações?");
+                alwaysGenerateETC = true;
+                no_of_simulations = Integer.parseInt(scannerUser.nextLine());
             }
 
         }
@@ -127,7 +125,7 @@ public class Main {
         System.out.println("Você quer executar todas as heuristicas? S/N");
         String todas = scannerUser.nextLine();
         if (todas.equalsIgnoreCase("S")){
-            heuristicas.addAll(Arrays.asList("MET", "MCT", "MinMin", "XSuffrage", "MinMean", "MaxMin", "MinVar", "OLB", "MinMax"));
+            heuristicas.addAll(Arrays.asList("MET", "MCT", "MinMin", "XSufferage", "MinMean", "MaxMin", "MinVar", "OLB", "MinMax"));
         }
         else {
             System.out.println("Qual heuristica você quer executar(por padrão o MET sempre será executado)?");
@@ -154,7 +152,7 @@ public class Main {
         Map<Integer, List<Long>> flowtimes = new HashMap<>();
         Map<Integer, List<Double>> computationTimes = new HashMap<>();
         double avgMakespan;
-        double makespanMET = 1;
+        double makespanMET = 0;
         double averageUtilization;
         double averageFlowTime;
         double averageComputationTime;
@@ -214,7 +212,6 @@ public class Main {
 
                 //Antes chamava essa função, que não gerava uma nova simulação, só limpava o mat e a fila de prioridade: se.newSimulation(false);
 
-                if (heuristicas.get(j) == "MET") makespanMET = sigmaMakespan[j];
 
                 tempTemp = System.currentTimeMillis();
                 out.println("Total time taken in the simulation = " + (tempTemp - tempTemp2) / 1000 + " sec.");
@@ -238,12 +235,22 @@ public class Main {
         CSVWriter writer = (CSVWriter) new CSVWriterBuilder(new FileWriter(fileNameResults+".csv"))
                 .withSeparator(',')
                 .build();
-        writer.writeNext(("Heuristica#Makespan#Utilização Média#FlowTime#ComputationTime (miliseconds)#matchingProximity").split("#"));
+        if(no_of_simulations == 1)
+            writer.writeNext(("Heuristica#Makespan#FlowTime#matchingProximity#Utilização média das máquinas#Tempo computacional").split("#"));
+        else if (no_of_simulations > 1) {
+            writer.writeNext(("Heuristica#Makespan médio#Desvio Padrão Makespan#" +
+                    "FlowTime médio#Desvio Padrão Flowtime#" +
+                    "matchingProximity#"+
+                    "Utilização média das máquinas#Desvio Padrão Utilização#"+
+                    "Tempo computacional médio#Desvio Padrão Tempo computacional#").split("#"));
+        }
         try{
 //            fos = new FileOutputStream(resultados);
 //            bw = new BufferedWriter(new OutputStreamWriter(fos));
-
+            double avgMakespanMET = 0;
             for (int j = 0; j < heuristicas.size(); j++) {
+                if (heuristicas.get(j) == "MET")
+                    avgMakespanMET = sigmaMakespan[j] / no_of_simulations;
 
                 avgMakespan = sigmaMakespan[j] / no_of_simulations;
                 avgMakespans.add(avgMakespan);
@@ -268,46 +275,36 @@ public class Main {
 
 
                 String hName = heuristicas.get(j);
-//
-//                bw.write("Heuristic Name:"+ hName);
-//                bw.newLine();
-//
-//                bw.write("Average Makespan:"+ avgMakespan);
-//                bw.newLine();
-////                bw.write("Standard Deviation makespan:"+ standardDeviation);
-////                bw.newLine();
-//
-//                bw.write("Average Utilization:"+ averageUtilization);
-//                bw.newLine();
-////                bw.write("Standard Deviation Average Utilization:"+ utilizationStandardDeviation);
-////                bw.newLine();
-//
-//                bw.write("Average flowtime:"+ averageFlowTime);
-//                bw.newLine();
-////                bw.write("Standard Deviation Average flowtime:"+ flowtimeStandardDeviation);
-////                bw.newLine();
-//
-//                bw.write("Average Computation Time:"+ averageComputationTime);
-//                bw.newLine();
-////                bw.write("Standard Deviation Average Computation Time:"+ computationStandardDeviation);
-////                bw.newLine();
-//                bw.newLine();
 
-                double matchingProximity = (double)avgMakespan / (double)makespanMET;
+                double matchingProximity = (double)avgMakespan / (double)avgMakespanMET;
 
-//                out.println(hName);
-//                out.println("matchingProximity para bigDecimal:" +BigDecimal.valueOf(matchingProximity));
-//                out.println("matchingProximity para bigDecimal com setscale:" +BigDecimal.valueOf(matchingProximity).setScale(3, RoundingMode.CEILING));
-//                out.println("String value of:" +String.valueOf(BigDecimal.valueOf(matchingProximity).setScale(3, RoundingMode.CEILING)));
-//                out.println("to String:" +(BigDecimal.valueOf(matchingProximity).setScale(3, RoundingMode.CEILING)).toString());
+                String[] entries = {"deu problema na quantidade de simulações"};
+                if(no_of_simulations == 1){
+                    entries = new String[]{hName,
+                    String.valueOf(BigDecimal.valueOf(avgMakespan).setScale(3, RoundingMode.CEILING)),
+                    String.valueOf(BigDecimal.valueOf(averageFlowTime).setScale(3, RoundingMode.CEILING)),
+                    String.valueOf(BigDecimal.valueOf(matchingProximity).setScale(3, RoundingMode.CEILING)),
+                    String.valueOf(BigDecimal.valueOf(averageUtilization).setScale(3, RoundingMode.CEILING)),
+                    String.valueOf(BigDecimal.valueOf(averageComputationTime))};
+                } else if (no_of_simulations > 1) {
+                    entries = new String[]{hName,
+                    String.valueOf(BigDecimal.valueOf(avgMakespan).setScale(3, RoundingMode.CEILING)),
+                    String.valueOf(BigDecimal.valueOf(standardDeviation*100/avgMakespan).setScale(3, RoundingMode.CEILING))+'%',
 
+                    String.valueOf(BigDecimal.valueOf(averageFlowTime).setScale(3, RoundingMode.CEILING)),
+                    String.valueOf(BigDecimal.valueOf(flowtimeStandardDeviation*100/averageFlowTime).setScale(3, RoundingMode.CEILING))+'%',
 
-                String[] entries = {hName,
-                        String.valueOf(BigDecimal.valueOf(avgMakespan).setScale(3, RoundingMode.CEILING)),
-                        String.valueOf(BigDecimal.valueOf(averageUtilization).setScale(3, RoundingMode.CEILING)),
-                        String.valueOf(BigDecimal.valueOf(averageFlowTime).setScale(3, RoundingMode.CEILING)),
-                        String.valueOf(BigDecimal.valueOf(averageComputationTime)),
-                        String.valueOf(BigDecimal.valueOf(matchingProximity).setScale(3, RoundingMode.CEILING))};
+                    String.valueOf(BigDecimal.valueOf(matchingProximity).setScale(3, RoundingMode.CEILING)),
+
+                    String.valueOf(BigDecimal.valueOf(averageUtilization).setScale(3, RoundingMode.CEILING)),
+                    String.valueOf(BigDecimal.valueOf(utilizationStandardDeviation*100/averageUtilization).setScale(3, RoundingMode.CEILING))+'%',
+
+                    String.valueOf(BigDecimal.valueOf(averageComputationTime)),
+                    String.valueOf(BigDecimal.valueOf(computationStandardDeviation*100/averageComputationTime).setScale(3, RoundingMode.CEILING))+'%'
+
+                    };
+                }
+
                 writer.writeNext(entries);
 
 
