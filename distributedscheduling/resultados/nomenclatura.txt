@@ -1,0 +1,8 @@
+xxyy_ qtd máquinas _ qtd tarefas _ qtd simulações
+
+xx - heterogeneridade das tarefas
+yy - heterogeneridade das máquinas
+
+exemplo
+hihi (alta heterogeneridade de tarefas e máquinas)
+hilo (alta heterogeneridade de tarefas e baixa heterogeneridade de máquinas)

@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
+import java.lang.Math;
 
 import static java.lang.System.out;
 
@@ -62,7 +63,9 @@ public class ETCGenerator {
         try{
             Random rt = new Random();
             Random rm = new Random();
-            int q[] = new int[n];
+            double q[] = new double[n];
+            double r[] = new double[m];
+
 //        System.out.println("TASK_HETEROGENEITY: "+ T_t);
 //        System.out.println("MACHINE_HETEROGENEITY: "+ T_m);
 
@@ -75,20 +78,59 @@ public class ETCGenerator {
                 bw.newLine();
             }
 
+//            for (int i = 0 ; i < n ; i++) { //numero de tasks
+//                double range = Math.random() * ((q[i]*1.2) - (q[i]*0.8)) + (q[i]*0.8);
+//                int N_t = rt.nextInt(T_t) + 1; //valor entre 0 e T_t(TASK_HETEROGENEITY)
+//                q[i] = N_t;
+//            }
+//            for (int i = 0 ; i < n ; i++) { //numero de tasks
+//                for (int j = 0 ; j < m ; j++) { //numero de maquinas
+//                    int N_m = rm.nextInt(T_m) + 1; //valor entre 0 e T_m(MACHINE_HETEROGENEITY)
+//                    double range = Math.random() * ((q[i]*1.2) - (q[i]*0.8)) + (q[i]*0.8);
+//                    etc[i][j] = (range * N_m) + q[i];
+//
+//                    if(bw != null){
+//                        bw.write(etc[i][j]+"");
+//                        bw.newLine();
+//                    }
+//                }
+//            }
+
             for (int i = 0 ; i < n ; i++) { //numero de tasks
-                int N_t = rt.nextInt(T_t) + 1; //valor entre 0 e T_t(TASK_HETEROGENEITY)
+                double percentTask = (float)T_t/100;
+//                out.println("percentTask:"+percentTask);
+                double max = 100*(1+percentTask);
+                double min = 100*(1-percentTask);
+//                out.println("max:"+max);
+//                out.println("min:"+min);
+                double N_t = (Math.random() * (max - min)) + min;
                 q[i] = N_t;
+//                out.println("q[i]:"+q[i]);
             }
+
+//            for (int i = 0 ; i < m ; i++) { //numero de tasks
+//                double percentMachine = (float)T_m/100;
+//                double max = 100*(1+percentMachine);
+//                double min = 100*(1-percentMachine);
+//                double N_m = (Math.random() * (max - min)) + min;
+//                r[i] = N_m;
+//            }
+
             for (int i = 0 ; i < n ; i++) { //numero de tasks
                 for (int j = 0 ; j < m ; j++) { //numero de maquinas
-                    int N_m = rm.nextInt(T_m) + 1; //valor entre 0 e T_m(MACHINE_HETEROGENEITY)
-                    etc[i][j] = (q[i] * N_m);
+                    double percentMachine = (float)T_m/100;
+                    double max = 100*(1+percentMachine);
+                    double min = 100*(1-percentMachine);
+                    double N_m = (Math.random() * (max - min)) + min;
+                    etc[i][j] = q[i] * N_m;
+//                    out.println("etc:"+etc[i][j]);
                     if(bw != null){
                         bw.write(etc[i][j]+"");
                         bw.newLine();
                     }
                 }
             }
+
             if(bw != null)
                 bw.close();
 

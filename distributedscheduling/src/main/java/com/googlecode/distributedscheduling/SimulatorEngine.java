@@ -195,7 +195,9 @@ public class SimulatorEngine {
     }
 
     
-
+    public double getMatchingP(){
+        return eng.matchingP;
+    }
 
     public void simulate(){
         /*tick represents the current time*/
@@ -217,6 +219,7 @@ public class SimulatorEngine {
         i2=(int) min(i1+S, arrivals.length);
         /*Set tick to the time of the first mapping event*/
         tick=arrivals[i1-1];
+        eng.setSumETCMET(metaSet);
         eng.schedule(metaSet,tick);
 
         /*Set tick to the time of the next mapping event*/
@@ -254,7 +257,6 @@ public class SimulatorEngine {
             i1=i2;
             i2=(int) min(i1+S, arrivals.length);
             /**/
-
         }while(!discontinueSimulation());
 
 

@@ -16,6 +16,8 @@ public class SchedulingEngine {
     String heuristic;
     SimulatorEngine sim;
     long computationTime;
+    double sumETCMET=0;
+    double matchingP=0;
 
     public SchedulingEngine(SimulatorEngine sim, String heuristic){
        this.heuristic=heuristic;
@@ -74,6 +76,33 @@ public class SchedulingEngine {
 
     }
 
+    public void setSumETCMET(Vector<Task> metaSet) {
+        double minExecTime;
+        int machine=0;
+        sumETCMET=0;
+
+        for(int i=0;i<metaSet.size();i++){//para cada tarefa
+            minExecTime = Integer.MAX_VALUE;
+            Task t=metaSet.elementAt(i);
+            for(int j=0;j<sim.m;j++){ //para cada máquina
+                if( sim.etc[t.tid][j] < minExecTime){
+                    minExecTime=sim.etc[t.tid][j];
+                    machine=j;
+                }
+            }
+            sumETCMET += sim.etc[t.tid][machine];
+        }
+    }
+
+    public void setMatchingP() {
+//        out.println("matchingP:"+matchingP);
+//        out.println("sumETCMET:"+sumETCMET);
+//        out.println("matchingP Invertido:"+matchingP/sumETCMET);
+        matchingP = matchingP/sumETCMET;
+//        out.println("matchingP:"+matchingP);
+//        out.println("////////////////////");
+    }
+
     private void schedule_MET(Vector<Task> metaSet,int currentTime){
         //O Algoritmo MET designa uma tarefa para o recurso que terá o melhor
         //tempo de execução estimado para essa tarefa, não importando se o recurso está
@@ -83,7 +112,7 @@ public class SchedulingEngine {
 
         double minExecTime;
         int machine=0;
-
+        matchingP = 0;
         for(int i=0;i<metaSet.size();i++){//para cada tarefa
             minExecTime = Integer.MAX_VALUE;
             Task t=metaSet.elementAt(i);
@@ -95,15 +124,16 @@ public class SchedulingEngine {
             }
 
             sim.mapTask(t, machine);
+            matchingP += sim.etc[t.tid][machine];
         }
-
+        this.setMatchingP();
     }
 
     private void schedule_MCT(Vector<Task> metaSet,int currentTime){
 
         double minComplTime;
         int machine=0;
-
+        matchingP = 0;
         for(int i=0;i<metaSet.size();i++){
             minComplTime=Integer.MAX_VALUE;
             Task t=metaSet.elementAt(i);
@@ -117,10 +147,13 @@ public class SchedulingEngine {
             }
 
             sim.mapTask(t, machine);
+            matchingP += sim.etc[t.tid][machine];
         }
+        this.setMatchingP();
     }
 
     private void schedule_MinMin(Vector<Task> metaSet, int currentTime){
+        matchingP = 0;
         /*We do not actually delete the task from the meta-set rather mark it as removed*/
         boolean[] isRemoved=new boolean[metaSet.size()];
 
@@ -149,6 +182,7 @@ public class SchedulingEngine {
 
             Task t=metaSet.elementAt(taskNo);//pegar no meta-set a task
             sim.mapTask(t, machine);
+            matchingP += sim.etc[t.tid][machine];
 
             /*Mark this task as removed*/
             tasksRemoved++;
@@ -165,10 +199,12 @@ public class SchedulingEngine {
             }
 
         }while(tasksRemoved!=metaSet.size());//enquanto tiver task
+        this.setMatchingP();
     }
 
 
     private void schedule_MaxMin(Vector<Task> metaSet, int currentTime){
+        matchingP = 0;
 
         /*We do not actually delete the task from the meta-set rather mark it as removed*/
         boolean[] isRemoved=new boolean[metaSet.size()];
@@ -212,6 +248,7 @@ public class SchedulingEngine {
             machine=minComplMachine[taskNo];
 
             sim.mapTask(t, machine);
+            matchingP += sim.etc[t.tid][machine];
 
             /*Mark this task as removed*/
             tasksRemoved++;
@@ -228,9 +265,11 @@ public class SchedulingEngine {
             }
 
         }while(tasksRemoved!=metaSet.size());
+        this.setMatchingP();
     }
 
     private void schedule_MinMax(Vector<Task> metaSet, int currentTime){
+        matchingP = 0;
 
         /*We do not actually delete the task from the meta-set rather mark it as removed*/
         boolean[] isRemoved=new boolean[metaSet.size()];
@@ -286,6 +325,7 @@ public class SchedulingEngine {
 //            out.println("machine: "+ machine);
 //            out.println("task: "+ taskNo);
             sim.mapTask(t, machine);//task 4, machine 3
+            matchingP += sim.etc[t.tid][machine];
 
             tasksRemoved++;
             isRemoved[taskNo]=true;
@@ -299,6 +339,7 @@ public class SchedulingEngine {
             }
 
         }while(tasksRemoved!=metaSet.size());
+        this.setMatchingP();
     }
 
     /*This function is a helper of schedule_MinMin() and schedule_MaxMin()*/
@@ -423,6 +464,7 @@ public class SchedulingEngine {
     }
 
     private void schedule_XSufferage(Vector<Task> metaSet, int currentTime) {
+        matchingP = 0;
 
         /*We do not actually delete the task from the meta-set rather mark it as removed*/
         boolean[] isRemoved=new boolean[metaSet.size()];
@@ -490,6 +532,7 @@ public class SchedulingEngine {
 //            out.println("maquina escolhida: "+ (machine+1));
 //            out.println("**********************");
             sim.mapTask(t, machine);
+            matchingP += sim.etc[t.tid][machine];
             tasksRemoved++;
             isRemoved[taskNo]=true;
 
@@ -502,6 +545,7 @@ public class SchedulingEngine {
             }
 
         }while(tasksRemoved!=metaSet.size());
+        this.setMatchingP();
     }
 
 
@@ -516,7 +560,7 @@ public class SchedulingEngine {
     }
 
     private void schedule_MinMean(Vector<Task> metaSet, int currentTime) {
-
+        matchingP = 0;
         /*We don't directly add the tasks to the p[] matrix of simulator rather add in this copy first*/
         Vector<TaskWrapper> pCopy[]=new Vector[sim.m];
 
@@ -593,10 +637,12 @@ public class SchedulingEngine {
             for(int j=0;j<pCopy[i].size();j++){
                 TaskWrapper tbu=pCopy[i].elementAt(j);
                 sim.mapTask(tbu.getTask(), i);
+                matchingP += sim.etc[tbu.getTask().tid][i];
             }
         }
         /*By doing this we are preserving the order in which tasks should have been mapped to the machines*/
         System.arraycopy(matCopy, 0, sim.mat, 0, sim.m);
+        this.setMatchingP();
     }
 
 
@@ -758,6 +804,7 @@ public class SchedulingEngine {
     }
 
     private void schedule_MinVar2(Vector<Task> metaSet, int currentTime) {
+        matchingP = 0;
         /*We don't directly add the tasks to the p[] matrix of simulator rather add in this copy first*/
         Vector<TaskWrapper> pCopy[]=new Vector[sim.m];
 
@@ -881,15 +928,17 @@ public class SchedulingEngine {
             for(int j=0;j<pCopy[i].size();j++){
                 TaskWrapper tbu=pCopy[i].elementAt(j);
                 sim.mapTask(tbu.getTask(), i);
+                matchingP += sim.etc[tbu.getTask().tid][i];
             }
         }
         /*By doing this we are preserving the order in which tasks should have been mapped to the machines*/
         System.arraycopy(matCopy, 0, sim.mat, 0, sim.m);
+        this.setMatchingP();
     }
 
 
     private void schedule_olb(Vector<Task> metaSet) {
-
+        matchingP = 0;
         for (int i = 0; i < metaSet.size(); i++) {
             Task t = metaSet.elementAt(i);
             double minMatTime = Integer.MAX_VALUE;
@@ -904,9 +953,11 @@ public class SchedulingEngine {
 //            out.println("Task:"+(i+1));
 //            out.println("Máquina:"+(machine+1));
             sim.mapTask(t, machine);
+            matchingP += sim.etc[t.tid][machine];
             //out.println("Adding task "+t.tid+" to machine "+machine+". Completion time = "+t.cTime+" @time "+currentTime);//////
         }
         //out.println("________Return from schedule_________");///////////////
+        this.setMatchingP();
     }
 
     private void schedule_Random(Vector<Task> metaSet) {

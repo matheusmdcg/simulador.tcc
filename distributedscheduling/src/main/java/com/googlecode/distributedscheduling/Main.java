@@ -79,10 +79,10 @@ public class Main {
 //            no_of_simulations = Integer.parseInt(scannerUser.nextLine());
             no_of_simulations = 1;
 
-            System.out.println("heterogeneidade padrão alta: 3000");
-            System.out.println("heterogeneidade padrão baixa: 100");
+            System.out.println("heterogeneidade padrão alta: 80");
+            System.out.println("heterogeneidade padrão baixa: 15");
 
-            System.out.println("Qual heterogeneidade das tarefas? Digite um número inteiro");
+            System.out.println("Qual heterogeneidade das tarefas? Digite um número inteiro entre 1 e 100");
             th.setNumericValue(Integer.parseInt(scannerUser.nextLine()));
 
             System.out.println("Qual heterogeneidade das máquinas?");
@@ -144,6 +144,7 @@ public class Main {
         /*Specify the parameters here*/
 
         double[] sigmaMakespan = new double[heuristicas.size()];
+        double[] matchingP = new double[heuristicas.size()];
         double[] averageUtilizationList = new double[heuristicas.size()];
         long[] flowTimeList = new long[heuristicas.size()];
         long[] computationTimeList = new long[heuristicas.size()];
@@ -173,10 +174,11 @@ public class Main {
 
             for (int j = 0; j < heuristicas.size() ; j++) {
 
-                out.println("heuristica:"+heuristicas.get(j));
+//                out.println("heuristica:"+heuristicas.get(j));
 
                 se.setHeuristic(heuristicas.get(j));
                 se.simulate();
+                matchingP[j] += se.getMatchingP();
 
                 sigmaMakespan[j] += se.getMakespan();
                 makespans.putIfAbsent(j, new ArrayList<>());
@@ -187,6 +189,7 @@ public class Main {
 //                out.println("FlowTime se.mat.sum:"+ Arrays.stream(se.mat).sum());
 //                out.println("SumMat calculado separado:" + se.sumMAT());
                 averageUtilizationList[j] += se.sumMAT() / (se.makespan * se.m);
+                avgUtilizations.putIfAbsent(j, new ArrayList<>());
                 avgUtilizations.putIfAbsent(j, new ArrayList<>());
                 List<Double> avgUtilizationsForHeuristic = avgUtilizations.get(j);
                 avgUtilizationsForHeuristic.add((double) se.sumMAT() / (double) (se.makespan * se.m));
@@ -214,10 +217,11 @@ public class Main {
 
 
                 tempTemp = System.currentTimeMillis();
-                out.println("Total time taken in the simulation = " + (tempTemp - tempTemp2) / 1000 + " sec.");
+//                out.println("Total time taken in the simulation = " + (tempTemp - tempTemp2) / 1000 + " sec.");
                 tempTemp2 = tempTemp;
-                out.println("---------------");
+//                out.println("---------------");
             }
+
         }
 
         List<Double> avgMakespans = new ArrayList<>();
@@ -236,27 +240,44 @@ public class Main {
                 .withSeparator(',')
                 .build();
         if(no_of_simulations == 1)
-            writer.writeNext(("Heuristica#Makespan#FlowTime#matchingProximity#Utilização média das máquinas#Tempo computacional").split("#"));
+            writer.writeNext(("Heuristica" +
+                    "#Makespan" +
+                    "#Heuristic ETC/MET ETC" +
+                    "#MPR" +
+                    "#FlowTime" +
+                    "#Utilização média das máquinas" +
+                    "#Tempo computacional").split("#"));
         else if (no_of_simulations > 1) {
-            writer.writeNext(("Heuristica#Makespan médio#Desvio Padrão Makespan#" +
-                    "FlowTime médio#Desvio Padrão Flowtime#" +
-                    "matchingProximity#"+
-                    "Utilização média das máquinas#Desvio Padrão Utilização#"+
-                    "Tempo computacional médio#Desvio Padrão Tempo computacional#").split("#"));
+            writer.writeNext(("Heuristica" +
+                    "#Makespan médio" +
+                    "#Desvio Padrão Makespan" +
+                    "#Heuristic ETC/MET ETC" +
+                    "#MPR" +
+                    "#FlowTime médio" +
+                    "#Desvio Padrão Flowtime" +
+                    "#Utilização média das máquinas" +
+                    "#Desvio Padrão Utilização"+
+                    "#Tempo computacional médio" +
+                    "#Desvio Padrão Tempo computacional#").split("#"));
         }
         try{
 //            fos = new FileOutputStream(resultados);
 //            bw = new BufferedWriter(new OutputStreamWriter(fos));
             double avgMakespanMET = 0;
+
+            String maiorMakespanNome = null;
+
+
             for (int j = 0; j < heuristicas.size(); j++) {
                 if (heuristicas.get(j) == "MET")
                     avgMakespanMET = sigmaMakespan[j] / no_of_simulations;
+
+                matchingP[j] = matchingP[j]/no_of_simulations;
 
                 avgMakespan = sigmaMakespan[j] / no_of_simulations;
                 avgMakespans.add(avgMakespan);
                 Double standardDeviation = calculateStandardDeviation(makespans.get(j), avgMakespan);
                 makespanStandardDeviations.add(standardDeviation);
-
 
                 averageUtilization = averageUtilizationList[j] / no_of_simulations;
                 avgUtilizationList.add(averageUtilization);
@@ -276,25 +297,30 @@ public class Main {
 
                 String hName = heuristicas.get(j);
 
-                double matchingProximity = (double)avgMakespan / (double)avgMakespanMET;
+                double MPR = (double)avgMakespan / (double)avgMakespanMET;
 
                 String[] entries = {"deu problema na quantidade de simulações"};
                 if(no_of_simulations == 1){
                     entries = new String[]{hName,
                     String.valueOf(BigDecimal.valueOf(avgMakespan).setScale(3, RoundingMode.CEILING)),
+                    String.valueOf(BigDecimal.valueOf(matchingP[j]).setScale(3, RoundingMode.CEILING)),
+                    String.valueOf(BigDecimal.valueOf(MPR).setScale(3, RoundingMode.CEILING)),
+
                     String.valueOf(BigDecimal.valueOf(averageFlowTime).setScale(3, RoundingMode.CEILING)),
-                    String.valueOf(BigDecimal.valueOf(matchingProximity).setScale(3, RoundingMode.CEILING)),
+
                     String.valueOf(BigDecimal.valueOf(averageUtilization).setScale(3, RoundingMode.CEILING)),
                     String.valueOf(BigDecimal.valueOf(averageComputationTime))};
                 } else if (no_of_simulations > 1) {
                     entries = new String[]{hName,
                     String.valueOf(BigDecimal.valueOf(avgMakespan).setScale(3, RoundingMode.CEILING)),
                     String.valueOf(BigDecimal.valueOf(standardDeviation*100/avgMakespan).setScale(3, RoundingMode.CEILING))+'%',
+                    String.valueOf(BigDecimal.valueOf(matchingP[j]).setScale(3, RoundingMode.CEILING)),
+                    String.valueOf(BigDecimal.valueOf(MPR).setScale(3, RoundingMode.CEILING)),
 
                     String.valueOf(BigDecimal.valueOf(averageFlowTime).setScale(3, RoundingMode.CEILING)),
                     String.valueOf(BigDecimal.valueOf(flowtimeStandardDeviation*100/averageFlowTime).setScale(3, RoundingMode.CEILING))+'%',
 
-                    String.valueOf(BigDecimal.valueOf(matchingProximity).setScale(3, RoundingMode.CEILING)),
+
 
                     String.valueOf(BigDecimal.valueOf(averageUtilization).setScale(3, RoundingMode.CEILING)),
                     String.valueOf(BigDecimal.valueOf(utilizationStandardDeviation*100/averageUtilization).setScale(3, RoundingMode.CEILING))+'%',
