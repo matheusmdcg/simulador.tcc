@@ -99,8 +99,8 @@ public class ETCGenerator {
             for (int i = 0 ; i < n ; i++) { //numero de tasks
                 double percentTask = (float)T_t/100;
 //                out.println("percentTask:"+percentTask);
-                double max = 100*(1+percentTask);
-                double min = 100*(1-percentTask);
+                double max = 1000*(1+percentTask);
+                double min = 1000*(1-percentTask);
 //                out.println("max:"+max);
 //                out.println("min:"+min);
                 double N_t = (Math.random() * (max - min)) + min;
@@ -119,8 +119,8 @@ public class ETCGenerator {
             for (int i = 0 ; i < n ; i++) { //numero de tasks
                 for (int j = 0 ; j < m ; j++) { //numero de maquinas
                     double percentMachine = (float)T_m/100;
-                    double max = 100*(1+percentMachine);
-                    double min = 100*(1-percentMachine);
+                    double max = 1000*(1+percentMachine);
+                    double min = 1000*(1-percentMachine);
                     double N_m = (Math.random() * (max - min)) + min;
                     etc[i][j] = q[i] * N_m;
 //                    out.println("etc:"+etc[i][j]);
