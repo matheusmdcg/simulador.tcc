@@ -67,6 +67,8 @@ public class SchedulingEngine {
             schedule_olb(metaSet);
         else if(heuristic.equals("MinMax"))
             schedule_MinMax(metaSet,currentTime);
+        else if(heuristic.equals("MinMax2"))
+            schedule_MinMax2(metaSet,currentTime);
 
 //        else if(h==Heuristic.Random)
 //            schedule_Random(metaSet);
@@ -312,6 +314,80 @@ public class SchedulingEngine {
 
                 if(maxComplTime[i] > maxMinComplTime){
                     maxMinComplTime = maxComplTime[i];//125; 200
+                    taskNo = i;//1; 4
+//                    out.println("maxMinComplTime: "+ maxMinComplTime);
+//                    out.println("taskNo: "+ taskNo);
+//                    out.println("Machine: "+ minComplMachine[i]);
+                }
+            }
+
+            Task t=metaSet.elementAt(taskNo);
+            machine=minComplMachine[taskNo];
+//            out.println("//////////////////////////////");
+//            out.println("machine: "+ machine);
+//            out.println("task: "+ taskNo);
+            sim.mapTask(t, machine);//task 4, machine 3
+            matchingP += sim.etc[t.tid][machine];
+
+            tasksRemoved++;
+            isRemoved[taskNo]=true;
+
+            for(i=0;i<metaSet.size();i++){
+                if(isRemoved[i])
+                    continue;
+                else{
+                    c[i][machine]= (sim.mat[machine]+sim.etc[metaSet.get(i).tid][machine]);
+                }
+            }
+
+        }while(tasksRemoved!=metaSet.size());
+        this.setMatchingP();
+    }
+
+    private void schedule_MinMax2(Vector<Task> metaSet, int currentTime){
+        matchingP = 0;
+
+        /*We do not actually delete the task from the meta-set rather mark it as removed*/
+        boolean[] isRemoved=new boolean[metaSet.size()];
+
+        /*Matrix to contain the completion time of each task in the meta-set on each machine.*/
+        double c[][]=schedule_MinMinHelper(metaSet);
+        int i=0;
+
+        /*Minimum Completion Time of the ith task in the meta set*/
+        double[] minComplTime=new double[metaSet.size()];
+        double[] maxComplTime=new double[metaSet.size()];
+        int[] minComplMachine=new int[metaSet.size()];
+
+        int tasksRemoved=0;
+        do{
+            double maxTime=Integer.MIN_VALUE;
+            double minTime=Integer.MAX_VALUE;
+            double maxMinComplTime=Integer.MIN_VALUE;
+
+            int machine=-1;
+            int taskNo=-1;
+            for(i=0;i<metaSet.size();i++){
+                maxTime=Integer.MIN_VALUE;
+                minTime=Integer.MAX_VALUE;
+                machine=-1;
+                if(isRemoved[i]) continue;
+                for(int j=0;j<sim.m;j++){
+
+                    if(c[i][j] > maxTime)
+                        maxTime = c[i][j];
+
+                    if(c[i][j] < minTime){
+                        minTime = c[i][j];
+                        machine = j;
+                    }
+                }
+                maxComplTime[i] = maxTime;      //[1]125; [2]40; [3]50; [4]200
+                minComplTime[i] = minTime;      //[1]50;  [2]20; [3]10; [4]50
+                minComplMachine[i] = machine;   //[1]2;   [2]3;  [3]3;  [4]3
+
+                if((maxComplTime[i] - minComplTime[i]) > maxMinComplTime){
+                    maxMinComplTime = (maxComplTime[i] - minComplTime[i]);//125; 200
                     taskNo = i;//1; 4
 //                    out.println("maxMinComplTime: "+ maxMinComplTime);
 //                    out.println("taskNo: "+ taskNo);

@@ -125,7 +125,7 @@ public class Main {
         System.out.println("Você quer executar todas as heuristicas? S/N");
         String todas = scannerUser.nextLine();
         if (todas.equalsIgnoreCase("S")){
-            heuristicas.addAll(Arrays.asList("MET", "MCT", "MinMin", "XSufferage", "MinMean", "MaxMin", "MinVar", "OLB", "MinMax"));
+            heuristicas.addAll(Arrays.asList("MET", "MCT", "MinMin", "XSufferage", "MinMean", "MaxMin", "MinVar", "OLB", "MinMax", "MinMax2"));
         }
         else {
             System.out.println("Qual heuristica você quer executar(por padrão o MET sempre será executado)?");
